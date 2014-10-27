@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<style type="text/css">
+    svg .data_space {
+        fill-opacity: 0;
+        stroke: #808080;
+        stroke-width: 2px;
+    }
+    svg .in_subset {
+        fill-opacity: 1;
+    }
+    svg .out_of_subset {
+        fill-opacity: 0.5;
+    }
+</style>
+
+<svg id="svg" width="800", height="400">
+    <circle class="data_space" id="population" cx="250" cy="200" r="150"></circle>
+    <text x="250" y="35" font-family="sans-serif" text-anchor="middle">
+        all graduates
+    </text>
+    <circle class="data_space" id="subset_population" cx="270" cy="150" r="80"></circle>
+    <text x="270" y="250" font-family="sans-serif" text-anchor="middle">
+        graduates from health-related fields
+    </text>
+    <circle class="data_space" id="sample" cx="500" cy="200" r="80"></circle>
+    <text x="500" y="105" font-family="sans-serif" text-anchor="middle">
+        sample
+    </text>
+</svg>
+<div>
+    <a id="button_sample" href="#"> Sample </a>
+    <div></div>
+    <a id="button_reset" href="#"> Reset </a>
+</div>
+<script type="text/javascript">
+    // colors
+    blue = "#569BBD";
+    green = "#4C721D";
+    yellow = "#F4DC00";
+    red = "#F05133";
+    black = "#000000";
+    gray = "#808080";
+    lgray = "#D9D9D9";
+
+    // svg
+    var svg = d3.select("#svg");
+    var svg_width = svg.attr("width");
+    var svg_height = svg.attr("height");
+    population_circle = d3.select("#population");
+    sample_circle = d3.select("#sample");
+    subset_population_circle = d3.select("#subset_population");
+    point_width = 3;
+    population_size = 350;
+    sample_size = 5;
+
+    data_points = []
+    var generate_data = function(){
+        data_points = [];
+        for(var i = 0; i < population_size; i++){
+
+            rand_angle = Math.random() * 2 * Math.PI;
+            rand_radius = Math.random() * (population_circle.attr("r") - 5);
+            pop_cx = rand_radius * Math.cos(rand_angle) + parseInt(population_circle.attr("cx"));
+            pop_cy = rand_radius * Math.sin(rand_angle) + parseInt(population_circle.attr("cy"));
+
+            point = {
+                "pop_cx": pop_cx,
+                "pop_cy": pop_cy,
+                "color": red,
+                "r": 3,
+                "class": (function(){
+                    if(Math.pow((subset_population_circle.attr("cx") - pop_cx),2) + Math.pow((subset_population_circle.attr("cy") - pop_cy),2) < Math.pow(subset_population_circle.attr("r"),2)){
+                        return "pop_point in_subset"
+                    }
+                        return "pop_point out_of_subset"
+                    })()
+            }
+            data_points.push(point);
+        }
+    };
+
+    var init_state = function(){
+        svg.selectAll(".pop_point").remove();
+
+        var circles = svg.selectAll(".pop_point")
+          .data(data_points)
+          .enter()
+          .append("circle");
+
+        circles.attr("cx", function(d, i) {
+                return d["pop_cx"];
+            })
+            .attr("cy", function(d, i) {
+                return d["pop_cy"];
+            })
+            .attr("r", function(d, i){
+                return d["r"];
+            })
+            .attr("class", function(d, i){
+                return d["class"];
+            })
+            .style("fill", function(d, i){
+                return d["color"];
+            })
+    };
+
+    var sample_without_replacement = function(arr, num_samples){
+        samples = []
+        for(i = 0; i < num_samples; i++){
+            var index = Math.floor(Math.random()*arr.length);
+            samples.push(arr.splice(index, 1)[0]);
+        }
+        return samples;
+    };
+
+    var select_samples = function(){
+        population = d3.selectAll(".in_subset")[0];
+        sample = sample_without_replacement(population, sample_size);
+        for( var i = 0; i < sample.length; i++){
+            rand_angle = Math.random() * 2 * Math.PI;
+            rand_radius = Math.random() * (parseInt(sample_circle.attr("r")) - 5);
+
+            d3.select(sample[i])
+                .transition()
+                .attr("cx", (function(origin_cx){
+                    return rand_radius * Math.cos(rand_angle) + origin_cx;
+                })(parseInt(sample_circle.attr("cx"))))
+                .attr("cy", (function(origin_cy){
+                    return rand_radius * Math.sin(rand_angle) + origin_cy;
+                })(parseInt(sample_circle.attr("cy"))))
+                .style("fill", blue)
+        }
+    };
+
+    generate_data();
+    init_state();
+
+    d3.select("#button_sample").on("click", function(){
+        select_samples();
+    });
+
+    d3.select("#button_reset").on("click", function(){
+        generate_data();
+        init_state();
+    });
+
+</script>
+
+{% endblock %}

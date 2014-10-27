@@ -1,0 +1,238 @@
+{% extends "layout.html" %}
+{% block body %}
+
+    <svg id="svg_canvas" width="800", height="400"></svg>
+    <div>
+        <a id="button_cluster" href="#"> Step 1. Select Clusters </a>
+        <div></div>
+        <a id="button_resample" href="#"> Step 2. Select Samples </a>
+        <div></div>
+        <a id="button_reset" href="#"> Reset </a>
+    </div>
+
+    <script type="text/javascript">
+
+          // buttons
+        d3.select("#button_reset").on("click", function(){
+            var svg = d3.select("svg");
+            generate_data();
+            svg.selectAll("circle").remove();
+            svg.selectAll("text").remove();
+
+            var circles = svg.selectAll("circle")
+              .data(data_points)
+              .enter()
+              .append("circle");
+
+            circles.attr("cx", function(d, i) {
+                return d["clust_cx"];
+              })
+              .attr("cy", function(d, i) {
+                return d["clust_cy"];
+              })
+              .attr("r", function(d, i){
+                return d["r"];
+              })
+              .attr("class", function(d, i){
+                return d["class"];
+              })
+              .style("fill", function(d, i){
+                return d["color"];
+              });
+
+            var clusters = svg.selectAll(".clust_circle")
+              .data(data_clusters)
+              .enter()
+              .append("circle")
+
+            clusters.attr("cx", function(d, i){
+                return d["cx"]
+              })
+              .attr("cy", function(d, i){
+                return d["cy"]
+              })
+              .attr("r", function(d, i){
+                return d["r"]
+              })
+              .attr("class", function(d, i){
+                return d["class"]
+              })
+              .attr("id", function(d, i){
+                return d["id"]
+              })
+              .style("fill-opacity", 0)
+              .style("stroke-width", 2)
+              .style("stroke", gray[0]);
+
+            var text = svg.selectAll("text")
+              .data(data_clusters)
+              .enter()
+              .append("text")
+              .text(function(d, i) {
+                    return "cluster " + (i+1);
+              })
+              .attr("x", function(d, i){
+                    return d["cx"];
+              })
+              .attr("y", function(d, i){
+                    return d["cy"] + d["r"] + 20;
+              })
+              .attr("font-family", "sans-serif")
+              .attr("font-size", 15)
+              .attr("fill", gray[0])
+              .attr("text-anchor", "middle");
+        });
+
+        d3.select("#button_resample").on("click", function(){
+            var svg = d3.select("svg");
+            select_samples(svg);
+        });
+
+        d3.select("#button_cluster").on("click", function(){
+            var svg = d3.select("svg");
+            select_clusters(svg);
+        });
+
+        // SVG
+        var svg = d3.select("#svg_canvas")
+        var svg_width = svg.attr("width")
+        var svg_height = svg.attr("height")
+        point_width = 3;
+
+        x_domain = [0, svg_width];
+        x_range = [point_width, svg_width-point_width];
+        var x_scale = d3.scale.linear().domain(x_domain).range(x_range);
+
+        y_domain = [0, svg_height];
+        y_range = [point_width, svg_height-point_width];
+        var y_scale = d3.scale.linear().domain(y_domain).range(y_range);
+
+        // colors
+        blue = ["#569BBD", "#569BBDC0", "#569BBD80", "#569BBD40"];
+        green = ["#4C721D", "#4C721DC0", "#4C721D80", "#4C721D40"];
+        yellow = ["#F4DC00", "#F4DC00C0", "#F4DC0080", "#F4DC0040"];
+        red = ["#F05133", "#F05133C0", "#F0513380", "#F0513340"];
+        black = ["#000000", "#000000C0", "#00000080", "#00000040"];
+        gray = ["#808080", "#808080C0", "#80808080", "#80808040"];
+        lgray = ["#D9D9D9", "#D9D9D9C0", "#D9D9D980", "#D9D9D940"];
+        colors = [blue[0], green[0], black[0], yellow[0]];
+        color_names = ["blue","green","black","yellow"];
+
+        // generate data
+        pop_size = 100;
+        samp_size = 24;
+        num_clusters_to_sample = 4;
+        num_samples_per_cluster = samp_size / num_clusters_to_sample;
+
+        // generate clusters
+        data_clusters = [];
+        cluster_radius = 60;
+        num_points_in_cluster = [12,11,10,12,11,10,12,9,13]
+        cluster_coords_cx = [0.17, 0.19, 0.52, 0.85, 1, 1.22, 1.45, 1.79, 1.80];
+        cluster_coords_cy = [0.3, 0.75, 0.5, 0.26, 0.73, 0.38, 0.67, 0.3, 0.8];
+        num_clusters = cluster_coords_cx.length;
+        var cluster_x_scale = d3.scale.linear().domain([0,2]).range([0,svg_width])
+        var cluster_y_scale = d3.scale.linear().domain([0,1]).range([0,svg_height])
+        for( var i = 0; i < num_clusters; i++){
+            cluster = {
+                "cx":  parseInt(cluster_x_scale(cluster_coords_cx[i])),
+                "cy": parseInt(cluster_x_scale(cluster_coords_cy[i])),
+                "r": cluster_radius,
+                "class": "clust_circle",
+                "num_points": num_points_in_cluster[i],
+                "id": "clust-" + i
+            };
+            data_clusters.push(cluster);
+        }
+
+        data_points = [];
+        var generate_data = function(){
+        data_points = [];
+        //generate points
+        for(var i = 0; i < num_clusters; i++){
+            cluster = data_clusters[i]
+            for(var j = 0; j < cluster["num_points"]; j++){
+                rand_angle = Math.random() * 2 * Math.PI;
+                rand_radius = Math.random() * (cluster["r"] - 5);
+                point = {
+                    "clust_cx": (function(clust_origin_cx){
+                      return rand_radius * Math.cos(rand_angle) + clust_origin_cx;
+                    })(cluster["cx"]),
+                    "clust_cy": (function(clust_origin_cy){
+                      return rand_radius * Math.sin(rand_angle) + clust_origin_cy;
+                    })(cluster["cy"]),
+                    "color": colors[Math.floor(Math.random()*colors.length)],
+                    "r": 3,
+                    "class": "point_circle " + cluster["id"]
+                }
+                data_points.push(point);
+            }
+        }
+        };
+
+        // sample from clusters
+        var sample_without_replacement = function(arr, num_samples){
+            samples = []
+            for(i = 0; i < num_samples; i++){
+              var index = Math.floor(Math.random()*arr.length);
+              samples.push(arr.splice(index, 1)[0]);
+            }
+            return samples;
+        }
+
+        var select_clusters = function(svg){
+          svg.selectAll(".selected_points").remove();
+          svg.selectAll(".selected_cluster")
+            .classed("selected_cluster", false)
+            .style("stroke", gray[0]);
+
+          var circles = svg.selectAll(".clust_circle")
+          samples = sample_without_replacement(circles[0], num_clusters_to_sample);
+
+          for(var i = 0; i < samples.length; i++){
+            select_cluster = d3.select(samples[i]);
+
+            select_cluster.classed("selected_cluster", true)
+              .style("stroke",red[0])
+              .style("stroke-dasharray","10,10");
+          }
+        };
+
+        var select_samples = function(svg){
+          svg.selectAll(".selected_point_fill").remove();
+          svg.selectAll(".selected_point_stroke").remove();
+
+          var clusters = svg.selectAll(".selected_cluster")[0];
+
+          for(var i = 0; i < clusters.length; i++){
+            cluster = d3.select(clusters[i])
+
+            var points = svg.selectAll("." + cluster.attr("id"))[0]
+            samples = sample_without_replacement(points, num_samples_per_cluster);
+
+            for(var j = 0; j < samples.length; j++){
+              selected_point = d3.select(samples[j])
+
+              svg.append("circle")
+                    .attr("class", "selected_point_fill")
+                    .attr("cx", selected_point.attr("cx"))
+                    .attr("cy", selected_point.attr("cy"))
+                    .attr("r",point_width)
+                    .style("fill",red[0]);
+
+              svg.append("circle")
+                .attr("class", "selected_point_stroke")
+                .attr("cx", selected_point.attr("cx"))
+                .attr("cy", selected_point.attr("cy"))
+                .attr("r",point_width + 2)
+                .style("fill-opacity",0)
+                .style("stroke-width",1)
+                .style("stroke",red[0]);
+                }
+            }
+        };
+        </script>
+  </body>
+</html>
+
+{% endblock %}
