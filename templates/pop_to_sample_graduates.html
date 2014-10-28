@@ -11,29 +11,41 @@
         fill-opacity: 1;
     }
     svg .out_of_subset {
-        fill-opacity: 0.5;
+        fill-opacity: 0.3;
+    }
+    .panel {
+        width: 200px;
+        border-color: #808080;
+        padding: 10px;
     }
 </style>
 
-<svg id="svg" width="800", height="400">
-    <circle class="data_space" id="population" cx="250" cy="200" r="150"></circle>
-    <text x="250" y="35" font-family="sans-serif" text-anchor="middle">
-        all graduates
-    </text>
-    <circle class="data_space" id="subset_population" cx="270" cy="150" r="80"></circle>
-    <text x="270" y="250" font-family="sans-serif" text-anchor="middle">
-        graduates from health-related fields
-    </text>
-    <circle class="data_space" id="sample" cx="500" cy="200" r="80"></circle>
-    <text x="500" y="105" font-family="sans-serif" text-anchor="middle">
-        sample
-    </text>
-</svg>
-<div>
-    <a id="button_sample" href="#"> Sample </a>
-    <div></div>
-    <a id="button_reset" href="#"> Reset </a>
+<div class="row">
+    <div class="col-md-6">
+        <svg id="svg" width="800", height="400">
+            <circle class="data_space" id="population" cx="250" cy="200" r="150"></circle>
+            <text x="250" y="35" font-family="sans-serif" text-anchor="middle">
+                all graduates
+            </text>
+            <circle class="data_space" id="subset_population" cx="270" cy="150" r="80"></circle>
+            <text x="270" y="250" font-family="sans-serif" text-anchor="middle">
+                graduates from health-related fields
+            </text>
+            <circle class="data_space" id="sample" cx="500" cy="200" r="80"></circle>
+            <text x="500" y="105" font-family="sans-serif" text-anchor="middle">
+                sample
+            </text>
+        </svg>
+    </div>
+    <div class="col-md-6">
+        <div class="panel">
+             Instead of sampling from all graduates equally, a nutrition major might inadvertently pick 10 graduates with health-related majors dis-proportionately often:
+            <button id="button_sample" type="button" class="btn btn-primary btn-xs"> Sample </button>
+            <button id="button_reset" type="button" class="btn btn-primary btn-xs"> Reset </button>
+        </div>
+    </div>
 </div>
+
 <script type="text/javascript">
     // colors
     blue = "#569BBD";
@@ -52,8 +64,8 @@
     sample_circle = d3.select("#sample");
     subset_population_circle = d3.select("#subset_population");
     point_width = 3;
-    population_size = 350;
-    sample_size = 5;
+    population_size = 200;
+    sample_size = 10;
 
     data_points = []
     var generate_data = function(){
@@ -139,11 +151,15 @@
 
     d3.select("#button_sample").on("click", function(){
         select_samples();
+        d3.select("#button_sample").classed("disabled",true);
+        d3.select("#button_reset").classed("disabled",false);
     });
 
     d3.select("#button_reset").on("click", function(){
         generate_data();
         init_state();
+        d3.select("#button_reset").classed("disabled",true);
+        d3.select("#button_sample").classed("disabled",false);
     });
 
 </script>

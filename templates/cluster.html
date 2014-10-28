@@ -99,14 +99,14 @@
     var y_scale = d3.scale.linear().domain(y_domain).range(y_range);
 
     // colors
-    blue = ["#569BBD", "#569BBDC0", "#569BBD80", "#569BBD40"];
-    green = ["#4C721D", "#4C721DC0", "#4C721D80", "#4C721D40"];
-    yellow = ["#F4DC00", "#F4DC00C0", "#F4DC0080", "#F4DC0040"];
-    red = ["#F05133", "#F05133C0", "#F0513380", "#F0513340"];
-    black = ["#000000", "#000000C0", "#00000080", "#00000040"];
-    gray = ["#808080", "#808080C0", "#80808080", "#80808040"];
-    lgray = ["#D9D9D9", "#D9D9D9C0", "#D9D9D980", "#D9D9D940"];
-    colors = [blue[0], green[0], black[0], yellow[0]];
+    blue = "#569BBD";
+    green = "#4C721D";
+    yellow = "#F4DC00";
+    red = "#F05133";
+    black = "#000000";
+    gray = "#808080";
+    lgray = "#D9D9D9";
+    colors = [blue, green, black, yellow];
     color_names = ["blue","green","black","yellow"];
 
     // generate data
@@ -207,7 +207,7 @@
           })
           .attr("font-family", "sans-serif")
           .attr("font-size", 15)
-          .attr("fill", gray[0])
+          .attr("fill", gray)
           .attr("text-anchor", "middle");
     };
 
