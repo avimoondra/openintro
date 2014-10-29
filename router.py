@@ -29,5 +29,9 @@ def chap1_pop_to_sample_graduates():
 def chap1_survey_sample():
     return render_template('survey_sample.html')
 
+@app.route('/chap1/blocking')
+def chap1_blocking():
+    return render_template('blocking.html')
+
 if __name__ == '__main__':
     app.run()

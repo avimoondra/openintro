@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<style type="text/css">
+    .panel {
+        width: 200px;
+        border-color: #808080;
+        padding: 10px 10px 10px 10px;
+        margin-left: 30px;
+    }
+    .separator {
+        margin-bottom: 10px;
+        height: 1px;
+        background-color: #808080;
+    }
+    svg .patient.red {
+        fill: #F05133;
+    }
+    svg .patient.blue {
+        fill: #569BBD;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-7">
+        <svg id="svg_canvas"></svg>
+    </div>
+    <div class="col-md-5">
+        <div class="panel">
+            <p> Example of blocking in a randomized experiment. </p>
+            <div class="separator"></div>
+            <p> <b>Step 1.</b> Divide patients into low-risk and high-risk blocks:
+                <button id="button_create_blocks" type="button" class="btn btn-primary btn-xs"> Create Blocks </button>
+            </p>
+            <p> <b>Step 2.</b> Evenly separate each block of patients into the treatment groups using randomization:
+                <button id="button_assign_groups" type="button" class="btn btn-primary btn-xs disabled"> Assign Groups </button>
+            </p>
+            <div class="separator"></div>
+            <div>This strategy ensures an equal representation of patients in each treatment group from both the low-risk and high-risk categories, so patient risk does not bias the outcome of the experiment.
+                <button id="button_reset" class="btn btn-primary btn-xs disabled"> Reset </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    // svg
+    height = 1;
+    width = height * 2;
+    domain = [0, width];
+    range = [0, 800];
+    svg_scale = d3.scale.linear().domain(domain).range(range);
+    var svg = d3.select("svg").attr("width", svg_scale(width)).attr("height", svg_scale(height));
+    var svg_width = svg.attr("width");
+    var svg_height = svg.attr("height");
+
+    // colors
+    blue = "#569BBD";
+    green = "#4C721D";
+    yellow = "#F4DC00";
+    red = "#F05133";
+    black = "#000000";
+    gray = "#808080";
+    lgray = "#D9D9D9";
+    colors = [blue, red];
+    color_names = ["blue","red"];
+
+    // generate data
+    datapoint_radius = 3;
+    start_x = 0.05;
+    start_y = 0.25;
+    spacing = 0.06;
+    dataset = [];
+    for(var x = 0; x < 6; x++){
+        for(var y = 0; y < 9; y++){
+            rand_index = Math.round(Math.random());
+            datapoint = {
+                "cx": svg_scale(start_x + x*spacing),
+                "cy": svg_scale(start_y + y*spacing),
+                "label": (x+1) * (y + 1),
+                "color": colors[rand_index],
+                "class": "patient " + color_names[rand_index]
+            };
+            dataset.push(datapoint);
+        }
+    }
+
+    var init = function(){
+        var circles = svg.selectAll("circle")
+            .data(dataset)
+            .enter()
+            .append("circle");
+
+        circles.attr("cx", function(d, i) {
+                return d["cx"];
+            })
+            .attr("cy", function(d, i) {
+                return d["cy"];
+            })
+            .attr("r", datapoint_radius)
+            .attr("class", function(d, i){
+                return d["class"];
+            });
+
+        labels = svg.selectAll(".labels_")
+    };
+
+    var create_blocks = function(){
+        for(var i = 1; i < dataset.length; i++){
+            datapoint = dataset[i];
+            // datapoint["cx"] =
+            // datapoint["cy"] =
+        }
+
+        var circles = svg.selectAll(".blue")
+            .attr("cx", function(d, i){
+                return d["cx"];
+            })
+            .attr("cy", function(d, i){
+                return d["cy"];
+            })
+            .classed("block", true);
+
+        //var text = svg.selectAll("");
+    }
+
+    var assign_groups = function(){
+
+    };
+
+    d3.select("#button_create_blocks").on("click", function(){
+        create_blocks(svg);
+        d3.select("#button_create_blocks").classed("disabled", true)
+        d3.select("#button_assign_groups").classed("disabled", false);
+    });
+
+    d3.select("#button_assign_groups").on("click", function(){
+        assign_groups(svg);
+        d3.select("#button_assign_groups").classed("disabled", true)
+        d3.select("#button_reset").classed("disabled", false);
+    });
+
+    d3.select("#button_reset").on("click", function(){
+        init();
+        d3.select("#button_reset").classed("disabled", true)
+        d3.select("#button_create_blocks").classed("disabled", false);
+    });
+
+    init();
+
+</script>
+
+{% endblock %}
