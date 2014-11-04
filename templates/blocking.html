@@ -1,6 +1,15 @@
 {% extends "layout.html" %}
 {% block body %}
 
+<!--
+pre-determine all the locations
+use this to determine location, height and width of rectangles
+use this to determine location of arrows
+draw rectangles + labels, then overlay copy of init g group, transition to new locations (delay)
+draw rectangles + labels,then overlay copy of blocked group, transiion to treatment blocks
+-->
+
+
 <style type="text/css">
     .panel {
         width: 200px;
@@ -19,11 +28,15 @@
     svg .patient.blue {
         fill: #569BBD;
     }
+    svg .patient_number {
+        font-size: 10px;
+    }
 </style>
 
 <div class="row">
     <div class="col-md-7">
-        <svg id="svg_canvas"></svg>
+        <svg id="svg_canvas">
+        </svg>
     </div>
     <div class="col-md-5">
         <div class="panel">
@@ -66,32 +79,72 @@
     color_names = ["blue","red"];
 
     // generate data
-    datapoint_radius = 3;
+    datapoint_radius = svg_scale(0.0075);
     start_x = 0.05;
     start_y = 0.25;
+    num_columns_in_block = 5
     spacing = 0.06;
+
     dataset = [];
-    for(var x = 0; x < 6; x++){
-        for(var y = 0; y < 9; y++){
+    blues = [];
+    reds = [];
+    counter = 0;
+    for(var y = 0; y < 9; y++){
+        for(var x = 0; x < 6; x++){
+            counter++;
             rand_index = Math.round(Math.random());
             datapoint = {
                 "cx": svg_scale(start_x + x*spacing),
                 "cy": svg_scale(start_y + y*spacing),
-                "label": (x+1) * (y + 1),
+                "label": counter + "",
                 "color": colors[rand_index],
                 "class": "patient " + color_names[rand_index]
             };
-            dataset.push(datapoint);
+            if(~datapoint["class"].indexOf("blue")){
+                blues.push(datapoint);
+            } else {
+                reds.push(datapoint);
+            }
         }
     }
 
+    start_x = 0.65
+    start_y = 0.15
+    num_columns_in_block = 7
+    for(var i = 0; i < blues.length; i++){
+        blues[i]["cx_block"] = svg_scale(start_x + (i % num_columns_in_block)*spacing);
+        blues[i]["cy_block"] = svg_scale(start_y + Math.ceil((i+1)/num_columns_in_block)*spacing);
+    }
+
+    start_y = start_y + 0.4;
+    for(var i = 0; i < reds.length; i++){
+        reds[i]["cx_block"] = svg_scale(start_x + (i % num_columns_in_block)*spacing);
+        reds[i]["cy_block"] = svg_scale(start_y + Math.ceil((i+1)/num_columns_in_block)*spacing);
+    }
+
+    dataset = blues.concat(reds);
+
     var init = function(){
-        var circles = svg.selectAll("circle")
+        var patients = svg.selectAll("g")
             .data(dataset)
             .enter()
-            .append("circle");
+            .append("g")
+            .classed("patient_wrapper", true)
+            .classed("blue",function(d){
+                if(~d["class"].indexOf("blue")){
+                    return true;
+                }
+                return false;
+            })
+            .classed("red",function(d){
+                if(~d["class"].indexOf("red")){
+                    return true;
+                }
+                return false;
+            })
 
-        circles.attr("cx", function(d, i) {
+        patients.append("circle")
+            .attr("cx", function(d, i) {
                 return d["cx"];
             })
             .attr("cy", function(d, i) {
@@ -102,26 +155,44 @@
                 return d["class"];
             });
 
-        labels = svg.selectAll(".labels_")
-    };
-
-    var create_blocks = function(){
-        for(var i = 1; i < dataset.length; i++){
-            datapoint = dataset[i];
-            // datapoint["cx"] =
-            // datapoint["cy"] =
-        }
-
-        var circles = svg.selectAll(".blue")
-            .attr("cx", function(d, i){
+        patients.append("text")
+            .text(function(d){
+                return d["label"];
+            })
+            .attr("x",function(d){
                 return d["cx"];
             })
-            .attr("cy", function(d, i){
-                return d["cy"];
+            .attr("y",function(d){
+                return d["cy"] - 5;
             })
-            .classed("block", true);
+            .attr("font-family","sans-serif")
+            .attr("text-anchor","middle")
+            .attr("class", "patient_number");
+    };
 
-        //var text = svg.selectAll("");
+    function clone(selector) {
+        var node = d3.select(selector).node();
+        return d3.select(node.parentNode.insertBefore(node.cloneNode(true), node.nextSibling));
+    }
+
+    function cloneAll(selector) {
+        var nodes = d3.selectAll(selector);
+        nodes.each(function(d, i) {
+            nodes[0][i] = this.parentNode.insertBefore(this.cloneNode(true), this.nextSibling);
+        });
+        return nodes;
+    }
+
+    var create_blocks = function(){
+        patient_blocks = cloneAll("g, .patient_wrapper")
+            .classed("patient_wrapper", false)
+            .classed("block_patient_wrapper", true)
+            .data(dataset);
+
+        patient_blocks.transition()
+            .attr("transform",function(d){
+                return "translate(" + (d["cx_block"] -  d["cx"]) + ", " + (d["cy_block"] - d["cy"]) + ")";
+            });
     }
 
     var assign_groups = function(){
@@ -129,13 +200,13 @@
     };
 
     d3.select("#button_create_blocks").on("click", function(){
-        create_blocks(svg);
+        create_blocks();
         d3.select("#button_create_blocks").classed("disabled", true)
         d3.select("#button_assign_groups").classed("disabled", false);
     });
 
     d3.select("#button_assign_groups").on("click", function(){
-        assign_groups(svg);
+        assign_groups();
         d3.select("#button_assign_groups").classed("disabled", true)
         d3.select("#button_reset").classed("disabled", false);
     });

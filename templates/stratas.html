@@ -160,17 +160,17 @@
 
     // strata by color
     var strata_by_color = function(svg){
-    	svg.selectAll(".selected_point_fill").remove();
-      svg.selectAll(".selected_point_stroke").remove();
+        svg.selectAll(".selected_point_fill").remove();
+        svg.selectAll(".selected_point_stroke").remove();
 
-      svg.selectAll(".point_circle")
-      .transition()
-      .attr("cx", function(d, i) {
-        return d["strata_cx"];
-    })
-      .attr("cy", function(d, i) {
-        return d["strata_cy"];
-    })
+          svg.selectAll(".point_circle")
+          .transition()
+          .attr("cx", function(d, i) {
+            return d["strata_cx"];
+        })
+          .attr("cy", function(d, i) {
+            return d["strata_cy"];
+        })
 
       var stratas = svg.selectAll(".strata_circle")
       .data(data_stratas)
