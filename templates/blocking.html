@@ -1,15 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<!--
-pre-determine all the locations
-use this to determine location, height and width of rectangles
-use this to determine location of arrows
-draw rectangles + labels, then overlay copy of init g group, transition to new locations (delay)
-draw rectangles + labels,then overlay copy of blocked group, transiion to treatment blocks
--->
-
-
 <style type="text/css">
     .panel {
         width: 200px;
@@ -42,7 +33,7 @@ draw rectangles + labels,then overlay copy of blocked group, transiion to treatm
         <div class="panel">
             <p> Example of blocking in a randomized experiment. </p>
             <div class="separator"></div>
-            <p> <b>Step 1.</b> Divide patients into low-risk and high-risk blocks:
+            <p> <b>Step 1.</b> Identify and divide patients into low-risk and high-risk blocks:
                 <button id="button_create_blocks" type="button" class="btn btn-primary btn-xs"> Create Blocks </button>
             </p>
             <p> <b>Step 2.</b> Evenly separate each block of patients into the treatment groups using randomization:
@@ -195,8 +186,19 @@ draw rectangles + labels,then overlay copy of blocked group, transiion to treatm
             });
     }
 
-    var assign_groups = function(){
+    var assign_block_to_groups = function(block_selection){
 
+    };
+
+    var assign_groups = function(){
+        red_patient_blocks = cloneAll(".red.block_patient_wrapper")
+            .classed("block_patient_wrapper", false)
+            .classed("tr_patient_wrapper",true)
+            .data(reds)
+        blue_patient_blocks = cloneAll(".blue.block_patient_wrapper")
+            .classed("block_patient_wrapper", false)
+            .classed("tr_patient_wrapper",true)
+            .data(blues)
     };
 
     d3.select("#button_create_blocks").on("click", function(){
