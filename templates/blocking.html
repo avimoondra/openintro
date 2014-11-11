@@ -22,6 +22,10 @@
     svg .patient_number {
         font-size: 10px;
     }
+    svg .surrounding_rect {
+        fill-opacity: 0;
+        stroke: black;
+    }
 </style>
 
 <div class="row">
@@ -71,10 +75,15 @@
 
     // generate data
     datapoint_radius = svg_scale(0.0075);
-    start_x = 0.05;
+    start_x = 0.10;
     start_y = 0.25;
-    num_columns_in_block = 5
+    num_columns_in_block = 6
     spacing = 0.06;
+
+    init_rect_start_x = start_x - spacing;
+    init_rect_start_y = start_y - spacing;
+    init_rect_width = (num_columns_in_block + 1) * spacing;
+    init_rect_height = Math.ceil(54/num_columns_in_block + 1) * spacing;
 
     dataset = [];
     blues = [];
@@ -102,21 +111,45 @@
     start_x = 0.65
     start_y = 0.15
     num_columns_in_block = 7
+    spacing = 0.06;
     for(var i = 0; i < blues.length; i++){
         blues[i]["cx_block"] = svg_scale(start_x + (i % num_columns_in_block)*spacing);
         blues[i]["cy_block"] = svg_scale(start_y + Math.ceil((i+1)/num_columns_in_block)*spacing);
     }
+    blue_block_start_x = start_x - spacing;
+    blue_block_start_y = start_y - spacing / 2;
+    blue_block_rect_height = Math.ceil(blues.length/num_columns_in_block + 1) * spacing;
+    blue_block_rect_width = (num_columns_in_block + 1) * spacing
 
-    start_y = start_y + 0.4;
+    start_y = start_y + 0.45;
     for(var i = 0; i < reds.length; i++){
         reds[i]["cx_block"] = svg_scale(start_x + (i % num_columns_in_block)*spacing);
         reds[i]["cy_block"] = svg_scale(start_y + Math.ceil((i+1)/num_columns_in_block)*spacing);
     }
+    red_block_start_x = start_x - spacing;
+    red_block_start_y = start_y - spacing / 2;
+    red_block_rect_height = Math.ceil(reds.length/num_columns_in_block + 1) * spacing;
+    red_block_rect_width = (num_columns_in_block + 1) * spacing;
 
     dataset = blues.concat(reds);
 
     var init = function(){
         svg.selectAll("*").remove();
+
+        svg.append("rect")
+            .attr("x", svg_scale(init_rect_start_x))
+            .attr("y", svg_scale(init_rect_start_y))
+            .attr("width", svg_scale(init_rect_width))
+            .attr("height", svg_scale(init_rect_height))
+            .classed("surrounding_rect", true);
+
+        svg.append("text")
+            .text("Numbered Patients")
+            .attr("x", svg_scale(init_rect_start_x + init_rect_width / 2))
+            .attr("y", svg_scale(init_rect_start_y - spacing / 3))
+            .attr("font-family","sans-serif")
+            .attr("text-anchor","middle");
+
         var patients = svg.selectAll("g")
             .data(dataset)
             .enter()
@@ -133,7 +166,7 @@
                     return true;
                 }
                 return false;
-            })
+            });
 
         patients.append("circle")
             .attr("cx", function(d, i) {
@@ -176,6 +209,35 @@
     }
 
     var create_blocks = function(){
+
+        svg.append("rect")
+            .attr("x", svg_scale(red_block_start_x))
+            .attr("y", svg_scale(red_block_start_y + spacing/2))
+            .attr("width", svg_scale(red_block_rect_width))
+            .attr("height", svg_scale(red_block_rect_height))
+            .classed("surrounding_rect", true);
+
+        svg.append("rect")
+            .attr("x", svg_scale(blue_block_start_x))
+            .attr("y", svg_scale(blue_block_start_y + spacing / 2))
+            .attr("width", svg_scale(blue_block_rect_width))
+            .attr("height", svg_scale(blue_block_rect_height))
+            .classed("surrounding_rect", true);
+
+        svg.append("text")
+            .text("High-risk patients")
+            .attr("x", svg_scale(blue_block_start_x + blue_block_rect_width / 2))
+            .attr("y", svg_scale(blue_block_start_y + spacing / 3))
+            .attr("font-family","sans-serif")
+            .attr("text-anchor","middle");
+
+        svg.append("text")
+            .text("Low-risk patients")
+            .attr("x", svg_scale(red_block_start_x + red_block_rect_width / 2))
+            .attr("y", svg_scale(red_block_start_y + spacing / 3))
+            .attr("font-family","sans-serif")
+            .attr("text-anchor","middle");
+
         patient_blocks = cloneAll("g, .patient_wrapper")
             .classed("patient_wrapper", false)
             .classed("block_patient_wrapper", true)
@@ -191,12 +253,23 @@
         start_treat_x = 1.3;
         start_treat_y = 0.15;
         start_control_x = start_treat_x;
-        start_control_y = start_treat_y + 0.4
+        start_control_y = start_treat_y + 0.45
         spacing = 0.06;
         num_columns_in_block = 7;
 
         treat_counter = 0;
         control_counter = 0;
+        for(var i = 0; i < blues.length; i++){
+            if (Math.round(Math.random()) == 1) {
+                blues[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
+                blues[i]["cy_group"] = svg_scale(start_treat_y + Math.ceil((treat_counter+1)/num_columns_in_block)*spacing);
+                treat_counter++;
+            } else {
+                blues[i]["cx_group"] = svg_scale(start_control_x + (control_counter % num_columns_in_block)*spacing);
+                blues[i]["cy_group"] = svg_scale(start_control_y + Math.ceil((control_counter+1)/num_columns_in_block)*spacing);
+                control_counter++;
+            }
+        }
         for(var i = 0; i < reds.length; i++){
             if (Math.round(Math.random()) == 1) {
                 reds[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
@@ -209,17 +282,43 @@
             }
         }
 
-        for(var i = 0; i < blues.length; i++){
-            if (Math.round(Math.random()) == 1) {
-                blues[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
-                blues[i]["cy_group"] = svg_scale(start_treat_y + Math.ceil((treat_counter+1)/num_columns_in_block)*spacing);
-                treat_counter++;
-            } else {
-                blues[i]["cx_group"] = svg_scale(start_control_x + (control_counter % num_columns_in_block)*spacing);
-                blues[i]["cy_group"] = svg_scale(start_control_y + Math.ceil((control_counter+1)/num_columns_in_block)*spacing);
-                control_counter++;
-            }
-        }
+        treat_group_start_x = start_treat_x - spacing;
+        treat_group_start_y = start_treat_y - spacing / 2;
+        treat_group_rect_height = Math.ceil(treat_counter/num_columns_in_block + 1) * spacing;
+        treat_group_rect_width = (num_columns_in_block + 1) * spacing
+
+        control_group_start_x = start_control_x - spacing
+        control_group_start_y = start_control_y - spacing / 2;
+        control_group_rect_height = Math.ceil(control_counter/num_columns_in_block + 1) * spacing;
+        control_group_rect_width = (num_columns_in_block + 1) * spacing
+
+        svg.append("rect")
+            .attr("x", svg_scale(treat_group_start_x))
+            .attr("y", svg_scale(treat_group_start_y + spacing / 2))
+            .attr("width", svg_scale(treat_group_rect_width))
+            .attr("height", svg_scale(treat_group_rect_height))
+            .classed("surrounding_rect", true);
+
+        svg.append("text")
+            .text("Treatment")
+            .attr("x", svg_scale(treat_group_start_x + treat_group_rect_width / 2))
+            .attr("y", svg_scale(treat_group_start_y + spacing / 3))
+            .attr("font-family","sans-serif")
+            .attr("text-anchor","middle");
+
+        svg.append("rect")
+            .attr("x", svg_scale(control_group_start_x))
+            .attr("y", svg_scale(control_group_start_y + spacing / 2))
+            .attr("width", svg_scale(control_group_rect_width))
+            .attr("height", svg_scale(control_group_rect_height))
+            .classed("surrounding_rect", true);
+
+        svg.append("text")
+            .text("Control")
+            .attr("x", svg_scale(control_group_start_x + control_group_rect_width / 2))
+            .attr("y", svg_scale(control_group_start_y + spacing / 3))
+            .attr("font-family","sans-serif")
+            .attr("text-anchor","middle");
 
         red_patient_blocks = cloneAll(".red.block_patient_wrapper")
             .classed("block_patient_wrapper", false)
@@ -231,18 +330,19 @@
             .data(blues)
 
         delay_duration = 100;
-        red_patient_blocks.transition()
+        blue_patient_blocks.transition()
+            .delay(function(d, i) { return i / blue_patient_blocks.length * delay_duration})
+            .attr("transform",function(d){
+                return "translate(" + (d["cx_group"] - d["cx"]) + ", " + (d["cy_group"] - d["cy"]) + ")";
+            });
+
+        setTimeout(function() {
+             red_patient_blocks.transition()
             .delay(function(d, i) { return i / red_patient_blocks.length * delay_duration})
             .attr("transform",function(d){
                 return "translate(" + (d["cx_group"] - d["cx"]) + ", " + (d["cy_group"] - d["cy"]) + ")";
             })
-        setTimeout(function() {
-            blue_patient_blocks.transition()
-            .delay(function(d, i) { return i / blue_patient_blocks.length * (delay_duration * 2)})
-            .attr("transform",function(d){
-                return "translate(" + (d["cx_group"] - d["cx"]) + ", " + (d["cy_group"] - d["cy"]) + ")";
-            });
-        }, delay_duration * (reds.length+1));
+        }, delay_duration * (blues.length+1));
 
     };
 
