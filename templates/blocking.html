@@ -116,6 +116,7 @@
     dataset = blues.concat(reds);
 
     var init = function(){
+        svg.selectAll("*").remove();
         var patients = svg.selectAll("g")
             .data(dataset)
             .enter()
@@ -186,11 +187,40 @@
             });
     }
 
-    var assign_block_to_groups = function(block_selection){
-
-    };
-
     var assign_groups = function(){
+        start_treat_x = 1.3;
+        start_treat_y = 0.15;
+        start_control_x = start_treat_x;
+        start_control_y = start_treat_y + 0.4
+        spacing = 0.06;
+        num_columns_in_block = 7;
+
+        treat_counter = 0;
+        control_counter = 0;
+        for(var i = 0; i < reds.length; i++){
+            if (Math.round(Math.random()) == 1) {
+                reds[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
+                reds[i]["cy_group"] = svg_scale(start_treat_y + Math.ceil((treat_counter+1)/num_columns_in_block)*spacing);
+                treat_counter++;
+            } else {
+                reds[i]["cx_group"] = svg_scale(start_control_x + (control_counter % num_columns_in_block)*spacing);
+                reds[i]["cy_group"] = svg_scale(start_control_y + Math.ceil((control_counter+1)/num_columns_in_block)*spacing);
+                control_counter++;
+            }
+        }
+
+        for(var i = 0; i < blues.length; i++){
+            if (Math.round(Math.random()) == 1) {
+                blues[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
+                blues[i]["cy_group"] = svg_scale(start_treat_y + Math.ceil((treat_counter+1)/num_columns_in_block)*spacing);
+                treat_counter++;
+            } else {
+                blues[i]["cx_group"] = svg_scale(start_control_x + (control_counter % num_columns_in_block)*spacing);
+                blues[i]["cy_group"] = svg_scale(start_control_y + Math.ceil((control_counter+1)/num_columns_in_block)*spacing);
+                control_counter++;
+            }
+        }
+
         red_patient_blocks = cloneAll(".red.block_patient_wrapper")
             .classed("block_patient_wrapper", false)
             .classed("tr_patient_wrapper",true)
@@ -199,6 +229,21 @@
             .classed("block_patient_wrapper", false)
             .classed("tr_patient_wrapper",true)
             .data(blues)
+
+        delay_duration = 100;
+        red_patient_blocks.transition()
+            .delay(function(d, i) { return i / red_patient_blocks.length * delay_duration})
+            .attr("transform",function(d){
+                return "translate(" + (d["cx_group"] - d["cx"]) + ", " + (d["cy_group"] - d["cy"]) + ")";
+            })
+        setTimeout(function() {
+            blue_patient_blocks.transition()
+            .delay(function(d, i) { return i / blue_patient_blocks.length * (delay_duration * 2)})
+            .attr("transform",function(d){
+                return "translate(" + (d["cx_group"] - d["cx"]) + ", " + (d["cy_group"] - d["cy"]) + ")";
+            });
+        }, delay_duration * (reds.length+1));
+
     };
 
     d3.select("#button_create_blocks").on("click", function(){
