@@ -33,5 +33,9 @@ def chap1_survey_sample():
 def chap1_blocking():
     return render_template('blocking.html')
 
+@app.route('/chap1/scatter')
+def chap1_scatter():
+    return render_template('scatter.html')
+
 if __name__ == '__main__':
     app.run()
