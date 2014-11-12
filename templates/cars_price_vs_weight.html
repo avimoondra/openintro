@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<style type="text/css">
+    svg .axis path,
+    svg .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    svg .datapoint {
+        fill: #569BBD;
+        fill-opacity: 0.5;
+        stroke: #569BBD;
+    }
+    .panel {
+        width: 200px;
+        border-color: #808080;
+        padding: 10px 10px 10px 10px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-9">
+        <svg></svg>
+    </div>
+    <div class="col-md-3">
+        <div class="panel">
+            <p> Plot two variables against each other. </p>
+            <div class="separator"></div>
+            <p> <b>Step 1.</b> Identify clusters in the data by location.
+                <button id="button_draw_clusters" type="button" class="btn btn-primary btn-xs"> Identify Clusters </button>
+            </p>
+            <p> <b>Step 2.</b> Randomly select 3 clusters to sample from:
+                <button id="button_select_clusters" type="button" class="btn btn-primary btn-xs disabled"> Select Clusters </button>
+            </p>
+            <p> <b>Step 3.</b> Randomly sample 8 cases from each selected cluster, collecting a total of 24 cases:
+                <button id="button_resample" type="button" class="btn btn-primary btn-xs disabled"> Sample </button>
+            </p>
+            <div class="separator"></div>
+            <button id="button_reset" class="btn btn-primary btn-xs disabled"> Reset </button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.category10();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var svg = d3.select("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.tsv("../static/data/00/cars.txt", function(error, data) {
+    data.forEach(function(d) {
+        d.price = +d.price;
+        d.weight = +d.weight;
+    });
+
+    x.domain(d3.extent(data, function(d) { return d.weight; })).nice();
+    y.domain(d3.extent(data, function(d) { return d.price; })).nice();
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+    .append("text")
+        .attr("class", "label")
+        .attr("x", width)
+        .attr("y", -6)
+        .style("text-anchor", "end")
+        .text("Weight (pounds)");
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+    .append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Price ($1000s)")
+
+    svg.selectAll(".datapoint")
+        .data(data)
+        .enter().append("circle")
+        .attr("class", "datapoint")
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return x(d.weight); })
+        .attr("cy", function(d) { return y(d.price); });
+
+});
+
+</script>
+
+{% endblock %}

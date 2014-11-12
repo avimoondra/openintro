@@ -41,5 +41,9 @@ def chap1_scatter():
 def chap1_email50_lines_vs_chars():
     return render_template('email50_lines_vs_chars.html')
 
+@app.route('/chap1/cars_price_vs_weight')
+def chap1_cars_price_vs_weight():
+    return render_template('cars_price_vs_weight.html')
+
 if __name__ == '__main__':
     app.run()
