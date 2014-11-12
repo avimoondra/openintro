@@ -37,5 +37,9 @@ def chap1_blocking():
 def chap1_scatter():
     return render_template('scatter_example.html')
 
+@app.route('/chap1/email50_lines_vs_chars')
+def chap1_email50_lines_vs_chars():
+    return render_template('email50_lines_vs_chars.html')
+
 if __name__ == '__main__':
     app.run()
