@@ -18,6 +18,11 @@
         border-color: #808080;
         padding: 10px 10px 10px 10px;
     }
+    .separator {
+        margin-bottom: 10px;
+        height: 1px;
+        background-color: #808080;
+    }
 </style>
 
 <div class="row">
@@ -26,24 +31,45 @@
     </div>
     <div class="col-md-3">
         <div class="panel">
-            <p> Plot two variables against each other. </p>
-            <div class="separator"></div>
-            <p> <b>Step 1.</b> Identify clusters in the data by location.
-                <button id="button_draw_clusters" type="button" class="btn btn-primary btn-xs"> Identify Clusters </button>
-            </p>
-            <p> <b>Step 2.</b> Randomly select 3 clusters to sample from:
-                <button id="button_select_clusters" type="button" class="btn btn-primary btn-xs disabled"> Select Clusters </button>
-            </p>
-            <p> <b>Step 3.</b> Randomly sample 8 cases from each selected cluster, collecting a total of 24 cases:
-                <button id="button_resample" type="button" class="btn btn-primary btn-xs disabled"> Sample </button>
+            <p>
+                Scatterplot between different numerical attributes of 54 cars. Plot different variables against each other to visualize interesting trends in the data.
             </p>
             <div class="separator"></div>
-            <button id="button_reset" class="btn btn-primary btn-xs disabled"> Reset </button>
+            <p>Variable 1 (x)</p>
+            <div class="dropdown">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                    <!-- <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li> -->
+                </ul>
+            </div>
+            <br/>
+            <p>Variable 2 (y)</p>
+            <div class="dropdown">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-expanded="true">
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2">
+                    <!-- <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li> -->
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
+
+var variables = ["passengers", "weight", "price", "mpgCity"];
+    var names = {"passengers" : "Passengers",
+                         "weight" : "Weight (pounds)",
+                         "price" : "Price ($1000s)",
+                         "mpgCity" : "Miles Per Gallon"}
+
+menu = $(".dropdown-menu");
+variables.forEach(function(element, index, array){
+    menu.append("<li role='presentation'><a role='menuitem' tabindex='-1' href='#'>"
+                + names[element]
+                + "</a></li>");
+});
 
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 960 - margin.left - margin.right,
@@ -54,8 +80,6 @@ var x = d3.scale.linear()
 
 var y = d3.scale.linear()
     .range([height, 0]);
-
-var color = d3.scale.category10();
 
 var xAxis = d3.svg.axis()
     .scale(x)
@@ -71,46 +95,72 @@ var svg = d3.select("svg")
 .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.tsv("../static/data/00/cars.txt", function(error, data) {
-    data.forEach(function(d) {
-        d.price = +d.price;
-        d.weight = +d.weight;
+var scatterplot = function(var1, var2){
+
+    d3.tsv("../static/data/00/cars.txt", function(error, data) {
+        d3.selectAll(".graph-component").remove();
+
+        data.forEach(function(d) {
+            d[var1] = +d[var1];
+            d[var2] = +d[var2];
+            console.log(d)
+        });
+
+        x.domain(d3.extent(data, function(d) { return d[var1]; })).nice();
+        y.domain(d3.extent(data, function(d) { return d[var2]; })).nice();
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+            .classed("graph-component", true)
+        .append("text")
+            .attr("class", "label graph-component")
+            .attr("x", width)
+            .attr("y", -6)
+            .style("text-anchor", "end")
+            .text(names[var1]);
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+            .classed("graph-component", true)
+        .append("text")
+            .attr("class", "label graph-component")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text(names[var2])
+
+        svg.selectAll(".datapoint")
+            .data(data)
+            .enter().append("circle")
+            .attr("class", "datapoint graph-component")
+            .attr("r", 3.5)
+            .attr("cx", function(d) { return x(d[var1]); })
+            .attr("cy", function(d) { return y(d[var2]); });
     });
+};
 
-    x.domain(d3.extent(data, function(d) { return d.weight; })).nice();
-    y.domain(d3.extent(data, function(d) { return d.price; })).nice();
-
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-    .append("text")
-        .attr("class", "label")
-        .attr("x", width)
-        .attr("y", -6)
-        .style("text-anchor", "end")
-        .text("Weight (pounds)");
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-    .append("text")
-        .attr("class", "label")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Price ($1000s)")
-
-    svg.selectAll(".datapoint")
-        .data(data)
-        .enter().append("circle")
-        .attr("class", "datapoint")
-        .attr("r", 3.5)
-        .attr("cx", function(d) { return x(d.weight); })
-        .attr("cy", function(d) { return y(d.price); });
-
+$(".dropdown-menu li a").click(function(){
+    var selText = $(this).text();
+    var dropdownButton = $(this).parents("ul").siblings("button");
+    dropdownButton.html(selText + '<span class="caret"></span>');
+    dropdownButton.trigger("change");
 });
+
+$("button").change(function(){
+    var1Name = $("#dropdownMenu1").text();
+    var2Name = $("#dropdownMenu2").text();
+    var1 = Object.keys(names).filter(function(key) {return names[key] === var1Name})[0];
+    var2 = Object.keys(names).filter(function(key) {return names[key] === var2Name})[0];
+    scatterplot(var1, var2);
+})
+
+//scatterplot(variables[3], variables[2]);
+$('#dropdownMenu1').siblings("ul").find("a:contains(" + names[variables[2]] +")").click();
+$('#dropdownMenu2').siblings("ul").find("a:contains(" + names[variables[1]] +")").click();
 
 </script>
 
