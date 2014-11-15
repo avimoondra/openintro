@@ -35,7 +35,7 @@
     </div>
     <div class="col-md-5">
         <div class="panel">
-            <p> Example of blocking in a randomized experiment. </p>
+            <p> Blocking in a randomized experiment. </p>
             <div class="separator"></div>
             <p> <b>Step 1.</b> Identify and divide patients into low-risk and high-risk blocks:
                 <button id="button_create_blocks" type="button" class="btn btn-primary btn-xs"> Create Blocks </button>
@@ -89,10 +89,25 @@
     blues = [];
     reds = [];
     counter = 0;
+
+    var sample_without_replacement = function(arr, num_samples){
+        samples = []
+        for(i = 0; i < num_samples; i++){
+          var index = Math.floor(Math.random()*arr.length);
+          samples.push(arr.splice(index, 1)[0]);
+      }
+      return samples;
+    }
+
+    num_patients = 54
+    interval = [];
+    for(var i = 0; i < num_patients; i++) { interval.push(i) }
+    rand_indices_for_blues  = sample_without_replacement(interval, num_patients/colors.length);
+
     for(var y = 0; y < 9; y++){
         for(var x = 0; x < 6; x++){
+            rand_index = rand_indices_for_blues.indexOf(counter) >= 0 ? 0 : 1;
             counter++;
-            rand_index = Math.round(Math.random());
             datapoint = {
                 "cx": svg_scale(start_x + x*spacing),
                 "cy": svg_scale(start_y + y*spacing),
@@ -259,8 +274,14 @@
 
         treat_counter = 0;
         control_counter = 0;
+
+        num_patients = 27
+        interval = [];
+        for(var i = 0; i < num_patients; i++) { interval.push(i) }
+        rand_indices_for_treat  = sample_without_replacement(interval, Math.floor(num_patients/colors.length) + Math.round(Math.random()));
+
         for(var i = 0; i < blues.length; i++){
-            if (Math.round(Math.random()) == 1) {
+            if (rand_indices_for_treat.indexOf(i) >= 0) {
                 blues[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
                 blues[i]["cy_group"] = svg_scale(start_treat_y + Math.ceil((treat_counter+1)/num_columns_in_block)*spacing);
                 treat_counter++;
@@ -270,8 +291,13 @@
                 control_counter++;
             }
         }
+
+        interval = [];
+        for(var i = 0; i < num_patients; i++) { interval.push(i) }
+        rand_indices_for_treat  = sample_without_replacement(interval, Math.floor(num_patients/colors.length) + Math.round(Math.random()));
+
         for(var i = 0; i < reds.length; i++){
-            if (Math.round(Math.random()) == 1) {
+            if (rand_indices_for_treat.indexOf(i) >= 0) {
                 reds[i]["cx_group"] = svg_scale(start_treat_x + (treat_counter % num_columns_in_block)*spacing);
                 reds[i]["cy_group"] = svg_scale(start_treat_y + Math.ceil((treat_counter+1)/num_columns_in_block)*spacing);
                 treat_counter++;
