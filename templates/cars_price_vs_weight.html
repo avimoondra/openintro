@@ -72,7 +72,7 @@ variables.forEach(function(element, index, array){
                 + "</a></li>");
 });
 
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
+var margin = {top: 20, right: 20, bottom: 30, left: 60},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
@@ -142,10 +142,31 @@ var scatterplot = function(var1, var2){
             .enter()
             .append("circle")
             .attr("class", "datapoint graph-component")
-            .attr("r", 3.5)
+            .attr("r", 5)
             .attr("cx", function(d) { return x(d[var1]); })
             .attr("cy", function(d) { return y(d[var2]); })
+
+        svg.selectAll(".datapoint").each(function(d){
+            insertHTML = "";
+            variables.forEach(function(variable){
+                insertHTML = insertHTML + variable + " : " + d[variable] + "<br/>"
+            });
+
+            options = {
+                container: 'body',
+                html: true,
+                placement: "right",
+                template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+                title: insertHTML,
+                trigger: 'hover focus click'
+            }
+            //$(this).tooltip(options)
+        });
+
+        svg.selectAll(".datapoint")
             .on("mouseover", function(d){
+                //$(this).tooltip('show');
+
                 tooltip.transition()
                     .duration(200)
                     .style("opacity", .9);
@@ -160,6 +181,8 @@ var scatterplot = function(var1, var2){
                     .style("top", (d3.event.pageY - 65) + "px");
             })
             .on("mouseout", function(d) {
+                //$(this).tooltip('hide');
+
                 tooltip.transition()
                     .duration(200)
                     .style("opacity", 0);
