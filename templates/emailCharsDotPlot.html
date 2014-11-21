@@ -116,10 +116,36 @@ var dotplot = function(variable){
             .attr("cx", function(d) { return x(d[variable]); })
             .attr("cy", 100)
 
+        var computePolyPosition = function(centerX){
+            triangleWidth = 30;
+            upperBound = x(x.domain()[1]) - triangleWidth
+            lowerBound = x(x.domain()[0]) + triangleWidth
+            if (centerX > upperBound)
+                centerX =  upperBound;
+            if (centerX < lowerBound)
+                centerX =  lowerBound;
+            return "" + (centerX + triangleWidth) + ",129 " + centerX + ",110 " + (centerX - triangleWidth) + ",129"
+        }
+
         svg.append("polygon")
-            .attr("points", "" + (x(mean) + 30) + ",129 " + x(mean) + ",110 " + (x(mean) - 30) + ",129")
+            .attr("points", computePolyPosition(x(mean)))
             .style("fill", "#F05133")
-            .attr("class", "meanTriangle graph-component");
+            .attr("class", "meanTriangle graph-component draggable");
+
+
+
+        var drag = d3.behavior.drag()
+            .on("dragstart", function(){
+                // do nothing
+            })
+            .on("drag", function(){
+                d3.select(this).attr("points", computePolyPosition(d3.mouse(this)[0]))
+            })
+            .on("dragend", function(){
+                //tiltPoints(d3.mouse(this));
+            });
+        d3.selectAll(".draggable").call(drag);
+
     });
 }
 
