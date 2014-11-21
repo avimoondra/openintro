@@ -45,5 +45,9 @@ def chap1_email50_lines_vs_chars():
 def chap1_cars_price_vs_weight():
     return render_template('cars_price_vs_weight.html')
 
+@app.route('/chap1/emailCharsDotPlot')
+def chap1_emailCharsDotPlot():
+    return render_template('emailCharsDotPlot.html')
+
 if __name__ == '__main__':
     app.run()
