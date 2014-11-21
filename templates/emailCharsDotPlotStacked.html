@@ -88,7 +88,8 @@ var dotplot = function(variable){
 
         sum = 0;
         data.forEach(function(d) {
-            d[variable] = +d[variable];
+            d[variable] = Math.round(+d[variable]);
+            console.log(d[variable])
             sum = sum + d[variable];
         });
         mean = sum/data.length;
@@ -107,17 +108,31 @@ var dotplot = function(variable){
             .style("text-anchor", "end")
             .text(names[variable]);
 
+        datapointRadius = 5;
         svg.selectAll(".datapoint")
             .data(data)
             .enter()
             .append("circle")
             .attr("class", "datapoint graph-component")
-            .attr("r", 5)
+            .attr("r", datapointRadius)
             .attr("cx", function(d) { return x(d[variable]); })
             .attr("cy", 100)
 
+        towers = {};
+        towerStart = 100;
+        a = []
+        svg.selectAll(".datapoint").each(function(d, i){
+            if(towers.hasOwnProperty(d[variable])){
+                d3.select(this).attr("cy", towerStart - 2.5 * datapointRadius * towers[d[variable]])
+                towers[d[variable]] = towers[d[variable]] + 1;
+            } else {
+                d3.select(this).attr("cy", towerStart)
+                towers[d[variable]] = 1;
+            }
+        });
+
         svg.append("polygon")
-            .attr("points", "" + (x(mean) + 30) + ",129 " + x(mean) + ",110 " + (x(mean) - 30) + ",129")
+            .attr("points", "" + (x(mean) + 30) + ",429 " + x(mean) + ",410 " + (x(mean) - 30) + ",429")
             .style("fill", "#F05133")
             .attr("class", "meanTriangle graph-component");
     });
