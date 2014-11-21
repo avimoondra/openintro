@@ -197,12 +197,68 @@ $(".dropdown-menu li a").click(function(){
     dropdownButton.trigger("change");
 });
 
+function wrap(text, width) {
+    displacedHeight = 0;
+    text.each(function() {
+        var text = d3.select(this),
+                words = text.text().split(/\s+/).reverse(),
+                word,
+                line = [],
+                lineNumber = 0,
+                lineHeight = 1.1, // ems
+                x = text.attr("x"),
+                y = text.attr("y"),
+                dy = parseFloat(text.attr("dy")),
+                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(" "));
+            if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = [word];
+                tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+            }
+        }
+        text.data([this.getBoundingClientRect()]);
+    });
+    console.log(displacedHeight)
+    return displacedHeight;
+}
+
+var displayNote = function(var1, var2){
+    d3.selectAll(".note").remove();
+
+    if(var1 == var2) {
+        note1 = d3.select('svg').append('text')
+            .text("Note: You've plotted a variable against itself. That's why the points are in line perfectly!")
+            .attr("class", "note")
+            .attr("x",800)
+            .attr("y",250)
+            .attr("dy",'0.71em')
+            .attr("font-family","sans-serif")
+            .call(wrap, 150);
+    }
+
+    if(var1 == variables[0] || var2 == variables[0]) {
+        d3.select('svg').append('text')
+            .text("Note: You've plotted using the passengers variable. This quantity is discrete, and can sensibly only take on values 4, 5, 6!")
+            .attr("class", "note")
+            .attr("x",800)
+            .attr("y", note1.data()[0]['bottom'] + 20)
+            .attr("dy",'0.71em')
+            .attr("font-family","sans-serif")
+            .call(wrap, 150);
+    }
+}
+
 $("button").change(function(){
     var1Name = $("#dropdownMenu1").text();
     var2Name = $("#dropdownMenu2").text();
     var1 = Object.keys(names).filter(function(key) {return names[key] === var1Name})[0];
     var2 = Object.keys(names).filter(function(key) {return names[key] === var2Name})[0];
     scatterplot(var1, var2);
+    displayNote(var1, var2);
 })
 
 $('#dropdownMenu1').siblings("ul").find("a:contains(" + names[variables[1]] +")").click();
