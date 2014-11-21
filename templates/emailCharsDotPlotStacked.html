@@ -89,7 +89,6 @@ var dotplot = function(variable){
         sum = 0;
         data.forEach(function(d) {
             d[variable] = Math.round(+d[variable]);
-            console.log(d[variable])
             sum = sum + d[variable];
         });
         mean = sum/data.length;
@@ -132,7 +131,7 @@ var dotplot = function(variable){
         });
 
         svg.append("polygon")
-            .attr("points", "" + (x(mean) + 30) + ",429 " + x(mean) + ",410 " + (x(mean) - 30) + ",429")
+            .attr("points", "" + (x(mean) + 30) + ",129 " + x(mean) + ",110 " + (x(mean) - 30) + ",129")
             .style("fill", "#F05133")
             .attr("class", "meanTriangle graph-component");
     });
