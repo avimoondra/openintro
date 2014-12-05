@@ -130,9 +130,13 @@ var dotplot = function(variable){
         svg.append("polygon")
             .attr("points", computePolyPosition(x(mean)))
             .style("fill", "#F05133")
+            .style("fill-opacity",0.25)
+            .attr("class", "meanTriangle graph-component");
+
+        svg.append("polygon")
+            .attr("points", computePolyPosition(x(mean)))
+            .style("fill", "#F05133")
             .attr("class", "meanTriangle graph-component draggable");
-
-
 
         var drag = d3.behavior.drag()
             .on("dragstart", function(){
