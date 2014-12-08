@@ -2,57 +2,62 @@
 {% block body %}
 <style>
 
-.chart .bar{
+.chart .bar rect{
     fill: #569BBD;
+}
+
+.chart {
+  font: 10px sans-serif;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
 }
 
 </style>
 
 <div class="row">
     <div class="col-md-9">
-        <svg class="singleModal chart"></svg>
-        <svg class="biModal chart"></svg>
-        <svg class="multiModal chart"></svg>
     </div>
     <div class="col-md-3">
         <div class="panel">
             <p>
                 Histogram. Drop a "limp spaghetti" to see the peaks in the distribution more clearly. From left to right, we observe single modal, bimodal, and multimodal distributions.
             </p>
+            <button id="single" type="button" class="btn btn-default">Chart 1</button>
+            <button id="bi" type="button" class="btn btn-default">Chart 2</button>
+            <button id="multi" type="button" class="btn btn-default">Chart 3</button>
         </div>
     </div>
 </div>
 
 <script>
 
-var width = 320,
-    height = 400;
+var margin = {top: 20, right: 30, bottom: 30, left: 30},
+    width = 320 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
 
-var y = d3.scale.linear()
-    .range([height, 0]);
-
-var chart = d3.selectAll(".chart")
-    .attr("width", width)
-    .attr("height", height);
-
-var drawHistogram = function(chartName, values){
-    chart = d3.select(".chart." + chartName);
+var drawHistogram = function(chartName, histData, lineData){
+    var chart = d3.select(".col-md-9").append("svg")
+        .attr("class","chart " + chartName)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var x = d3.scale.linear()
-        .domain([0, d3.max(values, function(d) { return d; })])
+        .domain([0, d3.max(histData, function(d) { return d; })])
         .range([0, width]);
 
     var data = d3.layout.histogram()
         .bins(x.ticks(14))
-        (values);
+        (histData);
 
     var y = d3.scale.linear()
         .domain([0, d3.max(data, function(d) { return d.y; })])
         .range([height, 0]);
-
-    var xAxis = d3.svg.axis()
-        .scale(x)
-        .orient("bottom");
 
     var bar = chart.selectAll(".bar")
         .data(data)
@@ -65,10 +70,47 @@ var drawHistogram = function(chartName, values){
         .attr("width", x(data[0].dx) - 1)
         .attr("height", function(d) { return height - y(d.y); });
 
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    chart.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    chart.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+
+    maxY= d3.max(data, function(d) { return d.y; }) - 0.5;
+    for(index in lineData){
+        lineData[index].y = maxY;
+    }
+
+    var lineFunction = d3.svg.line()
+        .x(function(d) { return margin.left + x(d.x); })
+        .y(function(d) { return y(d.y); })
+        .interpolate("basis");
+
+    var lineGraph = d3.select(".chart." + chartName).append("path")
+        .attr("d", lineFunction(lineData))
+        .attr("stroke", "#EDDDA9")
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
 }
 
 d3.json("../static/data/00/modalData.json", function(error, data) {
-    for (key in data) { drawHistogram(key, data[key]); }
+    histData = data["histData"];
+    lineData = data["lineData"];
+    for (key in histData) {
+        drawHistogram(key, histData[key], lineData[key]);
+    }
+
 });
 
 </script>
