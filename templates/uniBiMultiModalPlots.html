@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+{% block body %}
+<style>
+
+.chartWrapper{
+    display: inline-block;
+}
+
+.buttonRow{
+    width: 50%;
+    margin: 0 auto;
+}
+
+.chart .bar rect{
+    fill: #569BBD;
+}
+
+.chart {
+  font: 10px sans-serif;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+<div class="row">
+    <div class="col-md-9">
+        <div id="uniModal" class="chartWrapper">
+            <div class="svgWrapper"></div>
+            <div class="buttonRow">
+                <button type="button" class="btn btn-default dropButton">Drop</button>
+                <button type="button" class="btn btn-default resetButton disabled">Reset</button>
+            </div>
+        </div>
+        <div id="biModal" class="chartWrapper">
+            <div class="svgWrapper"></div>
+            <div class="buttonRow">
+                <button type="button" class="btn btn-default dropButton">Drop</button>
+                <button type="button" class="btn btn-default resetButton disabled">Reset</button>
+            </div>
+        </div>
+        <div id="multiModal" class="chartWrapper">
+            <div class="svgWrapper"></div>
+            <div class="buttonRow">
+                <button type="button" class="btn btn-default dropButton">Drop</button>
+                <button type="button" class="btn btn-default resetButton disabled">Reset</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="panel">
+            <p>
+                Histogram. Drop a "limp spaghetti" to see the peaks in the distribution more clearly. From left to right, we observe single modal, bimodal, and multimodal distributions.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+
+var margin = {top: 20, right: 30, bottom: 30, left: 30},
+    width = 320 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+chartData = {};
+
+var drawHistogram = function(chartName, histData, lineData){
+    var chart = d3.select("#" + chartName + " .svgWrapper").append("svg")
+        .attr("class","chart " + chartName)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.scale.linear()
+        .domain([0, d3.max(histData, function(d) { return d; })])
+        .range([0, width]);
+
+    var data = d3.layout.histogram()
+        .bins(x.ticks(14))
+        (histData);
+
+    var y = d3.scale.linear()
+        .domain([0, d3.max(data, function(d) { return d.y; })])
+        .range([height, 0]);
+
+    chartData[chartName] = {};
+    chartData[chartName]["xScale"] = x;
+    chartData[chartName]["yScale"] = y;
+
+    var bar = chart.selectAll(".bar")
+        .data(data)
+    .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+    bar.append("rect")
+        .attr("x", 1)
+        .attr("width", x(data[0].dx) - 1)
+        .attr("height", function(d) { return height - y(d.y); });
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    chart.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    chart.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+
+    chartData[chartName]["end"] = lineData;
+    startLineData = [];
+    maxY= d3.max(data, function(d) { return d.y; }) - 0.5;
+    console.log(maxY)
+    for(index in lineData){
+        point = {};
+        point["x"] = lineData[index].x;
+        point["y"] = maxY
+        startLineData.push(point)
+    }
+    chartData[chartName]["start"] = startLineData;
+    drawNoodle(chartName);
+}
+
+var drawNoodle = function(chartName){
+    d3.select("path." + chartName).remove();
+
+    lineDataStart = chartData[chartName]["start"];
+    x = chartData[chartName]["xScale"];
+    y = chartData[chartName]["yScale"];
+
+    var lineFunction = d3.svg.line()
+        .x(function(d) { return margin.left + x(d.x); })
+        .y(function(d) { return y(d.y); })
+        .interpolate("basis");
+
+    var lineGraph = d3.select(".chart." + chartName).append("path")
+        .attr("class",chartName)
+        .attr("d", lineFunction(lineDataStart))
+        .attr("stroke", "#EDDDA9")
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
+}
+
+var dropNoodle = function(chartName){
+    lineDataEnd = chartData[chartName]["end"];
+    x = chartData[chartName]["xScale"];
+    y = chartData[chartName]["yScale"];
+
+    var lineFunction = d3.svg.line()
+        .x(function(d) { return margin.left + x(d.x); })
+        .y(function(d) { return y(d.y); })
+        .interpolate("basis");
+
+    var lineGraph = d3.select("path." + chartName)
+        .transition()
+        .attr("d", lineFunction(lineDataEnd))
+}
+
+d3.json("../static/data/00/modalData.json", function(error, data) {
+    histData = data["histData"];
+    lineData = data["lineData"];
+    //console.log(lineData["biModal"])
+    for (key in histData) {
+        console.log(lineData)
+        drawHistogram(key, histData[key], lineData[key]);
+    }
+
+    d3.selectAll(".dropButton").on("click", function(){
+        chartName = $(this).parents(".chartWrapper").attr("id");
+        dropNoodle(chartName);
+        $(this).siblings('.resetButton').removeClass("disabled");
+        $(this).addClass("disabled");
+    })
+
+    d3.selectAll(".resetButton").on("click", function(){
+        chartName = $(this).parents(".chartWrapper").attr("id");
+        drawNoodle(chartName);
+        $(this).siblings('.dropButton').removeClass("disabled");
+        $(this).addClass("disabled");
+    })
+
+});
+
+</script>
+
+{% endblock %}
