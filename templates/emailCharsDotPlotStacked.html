@@ -88,7 +88,7 @@ var dotplot = function(variable){
 
         sum = 0;
         data.forEach(function(d) {
-            d[variable] = Math.round(+d[variable]);
+            d[variable] = Math.round(+d[variable]); // plus sign converts string to number
             sum = sum + d[variable];
         });
         mean = sum/data.length;

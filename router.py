@@ -53,9 +53,13 @@ def chap1_emailCharsDotPlot():
 def chap1_emailCharsDotPlotStacked():
     return render_template('emailCharsDotPlotStacked.html')
 
-@app.route('/chap1/singleBiMultiModalPlots')
-def chap1_singleBiMultiModalPlots():
-    return render_template('singleBiMultiModalPlots.html')
+@app.route('/chap1/uniBiMultiModalPlots')
+def chap1_uniBiMultiModalPlots():
+    return render_template('uniBiMultiModalPlots.html')
+
+@app.route('/chap1/simulationStudy')
+def chap1_simulationStudy():
+    return render_template('simulationStudy.html')
 
 if __name__ == '__main__':
     app.run()
