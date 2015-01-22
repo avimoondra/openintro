@@ -14,6 +14,20 @@
         background-color: #808080;
     }
 
+    .table-line {
+        stroke: black;
+        width: 1px;
+    }
+
+    .table-title {
+        font-weight: bold;
+    }
+
+    .math-line {
+        stroke: black;
+        width: 1px;
+    }
+
     svg {
         font: 15px sans-serif;
     }
@@ -46,6 +60,7 @@
     <div class="col-md-7">
         <svg width="800" height="800">
             <g id="experimentTable" transform="translate(30,30)">
+                <text class="table-title" x="80" y="30"> Observed </text>
                 <text x="180" y="30">
                     <tspan x="180">promoted</tspan>
                     <tspan x="260">not promoted</tspan>
@@ -69,19 +84,31 @@
                     <tspan x="260">13</tspan>
                     <tspan x="360">48</tspan>
                 </text>
+                <line class="table-line" x1="60" y1="75" x2="410" y2="75"></line>
+                <line class="table-line" x1="355" y1="0" x2="355" y2="100"></line>
             </g>
             <g id="experimentMath" transform="translate(500,100)">
                 <text x="0" y="0">
                     <tspan x="0" y="0"> 21 </tspan>
                     <tspan x="0" y="1.5em"> 24</tspan>
                 </text>
-                <line x1="0" y1="6" x2="20" y2="6"></line>
                 <text x="3em" y="0">
                     <tspan x="3em" y="0"> 14 </tspan>
                     <tspan x="3em" y="1.5em"> 24</tspan>
                 </text>
+                <text x="5em" y="9">
+                    = 0.292
+                </text>
+
+                 <text x="-10" y="-30"> Observed Difference </text>
+
+                <line class="math-line" x1="0" y1="6" x2="17" y2="6"></line>
+                <line class="math-line" x1="26" y1="6" x2="35" y2="6"></line>
+                <line class="math-line" x1="45" y1="6" x2="62" y2="6"></line>
+
             </g>
             <g id="simulationTable" transform="translate(30,230)">
+                <text class="table-title" x="80" y="30"> Simulated </text>
                 <text x="180" y="30">
                     <tspan x="360">Total</tspan>
                     <tspan x="180">promoted</tspan>
@@ -89,14 +116,14 @@
                 </text>
                 <text x="80" y="50">
                     <tspan>male_sim</tspan>
-                    <tspan id="maleSimPromoted" x="180" ></tspan>
-                    <tspan id="maleSimNotPromoted" x="260"></tspan>
+                    <tspan class="simulation-text-component" id="maleSimPromoted" x="180" ></tspan>
+                    <tspan class="simulation-text-component" id="maleSimNotPromoted" x="260"></tspan>
                     <tspan id="totalMale" x="360">24</tspan>
                 </text>
                 <text x="80" y="70">
                     <tspan>female_sim</tspan>
-                    <tspan id="femaleSimPromoted" x="180" ></tspan>
-                    <tspan id="femaleSimNotPromoted" x="260"></tspan>
+                    <tspan class="simulation-text-component" id="femaleSimPromoted" x="180" ></tspan>
+                    <tspan class="simulation-text-component" id="femaleSimNotPromoted" x="260"></tspan>
                     <tspan id="totalFemale" x="360">24</tspan>
                 </text>
                 <text x="80" y="90">
@@ -105,17 +132,29 @@
                     <tspan id="totalNotPromoted" x="260">13</tspan>
                     <tspan id="totalFemale" x="360">48</tspan>
                 </text>
+                <line class="table-line" x1="60" y1="75" x2="410" y2="75"></line>
+                <line class="table-line" x1="355" y1="0" x2="355" y2="100"></line>
             </g>
             <g id="simulationMath" transform="translate(500,300)">
                 <text x="0" y="0">
-                    <tspan id="male-numerator" x="0" y="0"> </tspan>
+                    <tspan class="simulation-text-component" id="male-numerator" x="0" y="0"> </tspan>
                     <tspan x="0" y="1.5em"> 24</tspan>
                 </text>
                 <line x1="0" y1="6" x2="20" y2="6"></line>
                 <text x="3em" y="0">
-                    <tspan id="female-numerator" x="3em" y="0"> </tspan>
+                    <tspan class="simulation-text-component" id="female-numerator" x="3em" y="0"> </tspan>
                     <tspan x="3em" y="1.5em"> 24</tspan>
                 </text>
+
+                <text class="simulation-text-component" id="simulatedDifference" x="5em" y="9">
+
+                </text>
+
+                <text x="-10" y="-30"> Simulated Difference </text>
+
+                <line class="math-line" x1="0" y1="6" x2="17" y2="6"></line>
+                <line class="math-line" x1="26" y1="6" x2="35" y2="6"></line>
+                <line class="math-line" x1="45" y1="6" x2="62" y2="6"></line>
             </g>
         </svg>
     </div>
@@ -130,16 +169,16 @@
         <p>Simulation</p>
         <p> What if we repeated this experiment again? Would the results look similar? If the difference in the results of the experiment were due to random chance (i.e. there was NO gender bias against females), then running the experiment again will probably yield similar results. So let's simulate the same experiment 100 times under "NO gender bias" conditions, and see how similar the results are to those of the original experiment. </p>
         <p>How can we simulate the experiment? Imagine a deck of 35 red cards and 13 blue cards, where red denotes the 35 <font color="red">promoted </font> candidates and blue denotes the 13 <font color="blue"> NOT promoted </font> from the original experiment <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Deck </button>. To simulate, follow these steps:</p>
-        <p> <b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs"> Shuffle </button> </p>
-        <p><b> Step 2. </b> Split into 2 piles of 24 as to represent the completely random, non-biased promotion decisions for 24 males and 24 females. <button id="simulation-step2" type="button" class="btn btn-primary btn-xs"> Split </button></p>
-        <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of promoted files in each group, and take the difference. <button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs"> Compute </button> </p>
-        <p><b> Step 4. </b> Record this value on the dot plot. <button id="simulation-step4" type="button" class="btn btn-primary btn-xs"> Plot </button> </p>
-        <p><b> Step 5. </b> Repeat (1)-(4) 100 times. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs"> Repeat </button> </p>
+        <p> <b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs disabled"> Shuffle </button> </p>
+        <p><b> Step 2. </b> Split into 2 piles of 24 as to represent the completely random, non-biased promotion decisions for 24 males and 24 females. <button id="simulation-step2" type="button" class="btn btn-primary btn-xs disabled"> Split </button></p>
+        <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of promoted files in each group, and take the difference. <button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs disabled"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs disabled"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs disabled"> Compute </button> </p>
+        <p><b> Step 4. </b> Record this value on the dot plot. <button id="simulation-step4" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> </p>
+        <p><b> Step 5. </b> Repeat (1)-(4) 100 times. <button id="simulation-step5" type="button" class="btn btn-primary btn-xs disabled"> Step</button> <button id="simulation-step5-playButton" type="button" class="btn btn-primary btn-xs disabled"> ► </button>  </p>
 
         <div class="separator"></div>
 
         <p> Results</p>
-        <p>By plotting the results in a dot plot, we can see the distribution of the results from running this experiment over and over again. Where does the original experiment lie on this dot plot? <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs"> Plot </button> What does its distance away from the center tell you? Remember, the thought process is: if there was no gender bias, we would typically see results similar to the original experiment. </p>
+        <p>By plotting the results in a dot plot, we can see the distribution of the results from running this experiment over and over again. Where does the original experiment lie on this dot plot? <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> What does its distance away from the center tell you? Remember, the thought process is: if there was no gender bias, we would typically see results similar to the original experiment. </p>
     </div>
 </div>
 
@@ -151,6 +190,7 @@ experiment.totalPromoted = 35;
 experiment.totalNotPromoted = experiment.total - experiment.totalPromoted;
 experiment.totalMale = experiment.total/2;
 experiment.totalFemale = experiment.total/2;
+experiment.differenceInPromotionRates = 21/experiment.totalMale - 14/experiment.totalFemale;
 
 numSimulations = 100;
 simulations = Array(numSimulations);
@@ -247,7 +287,7 @@ var initDotPlot = function(){
         .range([0, plotWidth]);
     // range is called on a linear scale, and sets scale's ouput range
 
-    x.domain(d3.extent(differences)).nice();
+    x.domain([d3.min(differences),Math.max(d3.max(differences), experiment.differenceInPromotionRates)]).nice();
     // extent grabs min and max
     // domain is called on a linear scale, and sets scale's input domain to go from min to max
     // nice extends the domain so it starts and ends on nice, rounded values
@@ -282,10 +322,10 @@ var initDotPlot = function(){
         .attr("class", "datapoint graph-component dot--inactive")
         .attr("r", datapointRadius)
         .attr("cx", function(d) { return x(d) + 100; })
-        .attr("cy", 100)
+        .attr("cy", 100);
 
         towers = {};
-        towerStart = plotHeight + 400;
+        towerStart = plotHeight + 390;
         svg.selectAll(".datapoint").each(function(d, i){
             if(towers.hasOwnProperty(d)){
                 d3.select(this).attr("cy", towerStart - 2.5 * datapointRadius * towers[d])
@@ -295,6 +335,22 @@ var initDotPlot = function(){
                 towers[d] = 1;
             }
         });
+
+    //x.domain([d3.min(differences),Math.max(d3.max(differences), experiment.differenceInPromotionRates)]);
+    datapoints.append("circle")
+        .attr("class", "datapoint graph-component experiment dot--inactive")
+        .attr("r", datapointRadius)
+        .attr("cx", x(experiment.differenceInPromotionRates) + 100)
+        .attr("cy", plotHeight + 400)
+        .style("fill","red");
+
+    datapoints.append("circle")
+        .attr("class","datapoint graph-component experiment dot--inactive")
+        .attr("r", datapointRadius+2)
+        .attr("cx", x(experiment.differenceInPromotionRates) + 100)
+        .attr("cy", plotHeight + 400)
+        .style("stroke","red")
+        .style("fill","none")
 }
 initDotPlot();
 
@@ -313,7 +369,7 @@ function unshuffledTransform(d, i){
 
 var step0 = function(index){
     var deck = svg.append("g")
-        .attr("class","unshuffled-deck")
+        .attr("class","unshuffled-deck simulation-component")
         .attr("transform","translate(200,170)")
     .selectAll("line")
         .data(simulations[index].simData)
@@ -357,7 +413,7 @@ var step2 = function(index){
         .classed("shuffled-deck", true);
 
     svg.selectAll(".unshuffled-deck>line")
-        .classed("card--inactive", true);
+        .classed("card--inactive", true)
 
     var males = deck.selectAll(".male")
     males.each(function(d, i){
@@ -381,14 +437,14 @@ var fillTable = function(){
         .classed("split-shuffled-deck", true);
 
     svg.selectAll(".shuffled-deck>line")
-        .classed("card--inactive", true);
+        .classed("card--inactive", true)
 
     var promotedMales = deck.selectAll(".male.promoted");
     var notPromotedMales = deck.selectAll(".male.notPromoted");
     var promotedFemales = deck.selectAll(".female.promoted");
     var notPromotedFemales = deck.selectAll(".female.notPromoted");
 
-    delay = 500;
+    delay = 25;
     promotedMales.transition()
         .attr("transform", function(d, i){
             selectionText = promotedMales[0][i];
@@ -424,7 +480,7 @@ var fillTable = function(){
                             });
                     });
             });
-    })
+    });
 }
 
 
@@ -438,33 +494,54 @@ var countCards = function(index){
 
 var computeDifference = function(index){
     simulation = simulations[index];
-    d3.select("#male-numerator").text(d3.select("#maleSimPromoted").text());
-    d3.select("#female-numerator").text(d3.select("#femaleSimPromoted").text());
+    d3.select("#male-numerator").text(simulation.maleSimPromoted);
+    d3.select("#female-numerator").text(simulation.femaleSimPromoted);
+
+    differenceText = simulation.maleSimPromoted/experiment.totalMale - simulation.femaleSimPromoted/experiment.totalFemale + "";
+    differenceText = differenceText.substring(0, Math.min(differenceText.indexOf(".") + 4, differenceText.length));
+    d3.select("#simulatedDifference").text("= " + differenceText);
 }
 
 var step4 = function(index){
-    selection = d3.select(d3.select(".datapoint")[0][index])
+    selection = d3.select(d3.selectAll(".datapoint")[0][index])
         .classed("dot--inactive",false);
+    currentIndex++;
 }
 
 var plotOriginalExperiment = function(){
-
+    d3.selectAll(".datapoint.experiment")
+        .classed("dot--inactive",false);
 }
 
+var step5 = function(){
+    d3.selectAll(".simulation-component").remove();
+    d3.selectAll(".simulation-text-component").text("");
+    step0(currentIndex);
+}
+
+var play = function(){
+//     simulations.slice(currentIndex,simulations.length);
+//     for(i = currentIndex; i < numSimulations; i++){
+
+//     }
+}
+
+currentIndex = 0;
+
 d3.select("#simulation-step0").on("click", function(){
-    step0(0);
+    step0(currentIndex);
     d3.select("#simulation-step0").classed("disabled", true)
     d3.select("#simulation-step1").classed("disabled", false);
 });
 
 d3.select("#simulation-step1").on("click", function(){
-    step1(0);
+    step1(currentIndex);
     d3.select("#simulation-step1").classed("disabled", true)
     d3.select("#simulation-step2").classed("disabled", false);
 });
 
 d3.select("#simulation-step2").on("click", function(){
-    step2(0);
+    step2(currentIndex);
     d3.select("#simulation-step2").classed("disabled", true)
     d3.select("#simulation-step3-1").classed("disabled", false);
 });
@@ -475,22 +552,41 @@ d3.select("#simulation-step3-1").on("click", function(){
 });
 
 d3.select("#simulation-step3-2").on("click", function(){
-    countCards(0);
+    countCards(currentIndex);
     d3.select("#simulation-step3-2").classed("disabled", true)
     d3.select("#simulation-step3-3").classed("disabled", false)
 });
 
 d3.select("#simulation-step3-3").on("click", function(){
-    computeDifference(0);
+    computeDifference(currentIndex);
     d3.select("#simulation-step3-3").classed("disabled", true);
     d3.select("#simulation-step4").classed("disabled", false);
 });
 
-
 d3.select("#simulation-step4").on("click", function(){
-    step4(0);
+    step4(currentIndex);
     d3.select("#simulation-step4").classed("disabled", true);
     d3.select("#simulation-step5").classed("disabled", false);
+    d3.select("#simulation-step5-playButton").classed("disabled", false);
+});
+
+d3.select("#simulation-step5").on("click", function(){
+    step5();
+    d3.select("#simulation-step5").classed("disabled", true);
+    d3.select("#simulation-plotOriginal").classed("disabled", false);
+    d3.select("#simulation-step1").classed("disabled", false);
+});
+
+d3.select("#simulation-step5-playButton").on("click", function(){
+    play(currentIndex);
+    // d3.select("#simulation-step5").classed("disabled", true);
+    // d3.select("#simulation-plotOriginal").classed("disabled", false);
+    // d3.select("#simulation-step1").classed("disabled", false);
+});
+
+d3.select("#simulation-plotOriginal").on("click", function(){
+    plotOriginalExperiment();
+    d3.select("#simulation-plotOriginal").classed("disabled", true);
 });
 
 </script>
