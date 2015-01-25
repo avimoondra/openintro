@@ -1,17 +1,36 @@
 {% extends "layout.html" %}
 {% block body %}
 
+<link rel="stylesheet" href="../static/css/d3.slider.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
+
+
 <style type="text/css">
+    *:focus {
+        outline: 0;
+    }
+
     .panel {
-        width: 600px;
+        width: 400px;
         border-color: #808080;
-        padding: 10px 10px 10px 10px;
+        padding: 10px;
         margin-left: -100px;
     }
     .separator {
         margin-bottom: 10px;
         height: 1px;
         background-color: #808080;
+    }
+
+    #sliderWrapper {
+        width: 350px;
+        display: inline-block;
+    }
+
+    #slider {
+        margin-left: 10px;
+        margin-right: 10px;
     }
 
     .table-line {
@@ -21,11 +40,21 @@
 
     .table-title {
         font-weight: bold;
+        font-size: 20px;
     }
 
     .math-line {
         stroke: black;
         width: 1px;
+    }
+
+    .sim-label {
+        font: 13px Monaco;
+    }
+
+    #currentSimIndex {
+        opacity: 0.3;
+        font-size: 20px;
     }
 
     svg {
@@ -36,7 +65,7 @@
         opacity: 0.4;
     }
 
-    svg .dot--inactive {
+    svg .dot--hidden {
         opacity: 0;
     }
 
@@ -53,33 +82,32 @@
         stroke: #000;
         shape-rendering: crispEdges;
     }
-
 </style>
 
 <div class="row">
     <div class="col-md-7">
         <svg width="800" height="800">
             <g id="experimentTable" transform="translate(30,30)">
-                <text class="table-title" x="80" y="30"> Observed </text>
+                <text class="table-title" x="60" y="30"> Observed </text>
                 <text x="180" y="30">
                     <tspan x="180">promoted</tspan>
                     <tspan x="260">not promoted</tspan>
                     <tspan x="360">Total</tspan>
                 </text>
                 <text x="80" y="50">
-                    <tspan>male</tspan>
+                    <tspan x="120">male </tspan>
                     <tspan x="180" >21</tspan>
                     <tspan x="260">3</tspan>
                     <tspan x="360">24</tspan>
                 </text>
                 <text x="80" y="70">
-                    <tspan>female</tspan>
+                    <tspan x="107">female</tspan>
                     <tspan x="180" >14</tspan>
                     <tspan x="260">10</tspan>
                     <tspan x="360">24</tspan>
                 </text>
                 <text x="80" y="90">
-                    <tspan>Total</tspan>
+                    <tspan x="117">Total</tspan>
                     <tspan x="180" >35</tspan>
                     <tspan x="260">13</tspan>
                     <tspan x="360">48</tspan>
@@ -108,26 +136,27 @@
 
             </g>
             <g id="simulationTable" transform="translate(30,230)">
-                <text class="table-title" x="80" y="30"> Simulated </text>
+                <text x="17" y="30" id="currentSimIndex"></text>
+                <text class="table-title" x="55" y="30"> Simulated </text>
                 <text x="180" y="30">
                     <tspan x="360">Total</tspan>
                     <tspan x="180">promoted</tspan>
                     <tspan x="260">not promoted</tspan>
                 </text>
                 <text x="80" y="50">
-                    <tspan>male_sim</tspan>
+                    <tspan class="sim-label" x="87">male_sim</tspan>
                     <tspan class="simulation-text-component" id="maleSimPromoted" x="180" ></tspan>
                     <tspan class="simulation-text-component" id="maleSimNotPromoted" x="260"></tspan>
                     <tspan id="totalMale" x="360">24</tspan>
                 </text>
                 <text x="80" y="70">
-                    <tspan>female_sim</tspan>
+                    <tspan class="sim-label" x="72">female_sim</tspan>
                     <tspan class="simulation-text-component" id="femaleSimPromoted" x="180" ></tspan>
                     <tspan class="simulation-text-component" id="femaleSimNotPromoted" x="260"></tspan>
                     <tspan id="totalFemale" x="360">24</tspan>
                 </text>
                 <text x="80" y="90">
-                    <tspan>Total</tspan>
+                    <tspan x="117">Total</tspan>
                     <tspan id="totalPromoted" x="180" >35</tspan>
                     <tspan id="totalNotPromoted" x="260">13</tspan>
                     <tspan id="totalFemale" x="360">48</tspan>
@@ -146,9 +175,7 @@
                     <tspan x="3em" y="1.5em"> 24</tspan>
                 </text>
 
-                <text class="simulation-text-component" id="simulatedDifference" x="5em" y="9">
-
-                </text>
+                <text class="simulation-text-component" id="simulatedDifference" x="5em" y="9"></text>
 
                 <text x="-10" y="-30"> Simulated Difference </text>
 
@@ -159,41 +186,43 @@
         </svg>
     </div>
     <div class="col-md-5 panel">
-        <p> Experiment </p>
-        <p>Summary results for the gender discrimination study. What is the difference in promotion rates between the males and females?
-            <button id="experiment-compute" type="button" class="btn btn-primary btn-xs"> Compute </button>
+        <p> <b> Simulation </b></p>
+        <p>
+        Simulate the experiment 100 times under the assumption that the null hypothesis is true, i.e. assuming there is no gender bias. Use a deck of 48 cards, each representing one resume in the study. 35 of these cards are red, denoting <font color="red">promoted</font> candidates, 13 are blue, denoting <font color="blue"> NOT promoted </font> candidates. <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Generate Deck </button>
+        <p> <b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs disabled"> Shuffle </button> </p>
+        <p><b> Step 2. </b> Split into 2 piles of 24 as to represent the completely random, non-biased promotion decisions for the 24 males and 24 females. <button id="simulation-step2" type="button" class="btn btn-primary btn-xs disabled"> Split </button></p>
+        <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of promoted files in each group, and take the difference. <button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs disabled"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs disabled"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs disabled"> Compute </button> </p>
+        <p><b> Step 4. </b> Record this value on the dot plot. <button id="simulation-step4" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> </p>
+        <p><b> Step 5. </b> Repeat Steps (1)-(4) 100 times.
+
+        <div id="step4buttonWrapper">
+            <button id="simulation-step5-playButton" type="button" class="btn btn-primary btn-xs"> ► </button>
+            <div id="sliderWrapper"><div id="slider"></div></div>
+        </div>
+
         </p>
 
         <div class="separator"></div>
 
-        <p>Simulation</p>
-        <p> What if we repeated this experiment again? Would the results look similar? If the difference in the results of the experiment were due to random chance (i.e. there was NO gender bias against females), then running the experiment again will probably yield similar results. So let's simulate the same experiment 100 times under "NO gender bias" conditions, and see how similar the results are to those of the original experiment. </p>
-        <p>How can we simulate the experiment? Imagine a deck of 35 red cards and 13 blue cards, where red denotes the 35 <font color="red">promoted </font> candidates and blue denotes the 13 <font color="blue"> NOT promoted </font> from the original experiment <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Deck </button>. To simulate, follow these steps:</p>
-        <p> <b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs disabled"> Shuffle </button> </p>
-        <p><b> Step 2. </b> Split into 2 piles of 24 as to represent the completely random, non-biased promotion decisions for 24 males and 24 females. <button id="simulation-step2" type="button" class="btn btn-primary btn-xs disabled"> Split </button></p>
-        <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of promoted files in each group, and take the difference. <button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs disabled"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs disabled"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs disabled"> Compute </button> </p>
-        <p><b> Step 4. </b> Record this value on the dot plot. <button id="simulation-step4" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> </p>
-        <p><b> Step 5. </b> Repeat (1)-(4) 100 times. <button id="simulation-step5" type="button" class="btn btn-primary btn-xs disabled"> Step</button> <button id="simulation-step5-playButton" type="button" class="btn btn-primary btn-xs disabled"> ► </button>  </p>
-
-        <div class="separator"></div>
-
-        <p> Results</p>
+        <p> <b> Results </b> </p>
         <p>By plotting the results in a dot plot, we can see the distribution of the results from running this experiment over and over again. Where does the original experiment lie on this dot plot? <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> What does its distance away from the center tell you? Remember, the thought process is: if there was no gender bias, we would typically see results similar to the original experiment. </p>
     </div>
 </div>
 
 <script>
 
-experiment = {};
-experiment.total = 48;
-experiment.totalPromoted = 35;
-experiment.totalNotPromoted = experiment.total - experiment.totalPromoted;
-experiment.totalMale = experiment.total/2;
-experiment.totalFemale = experiment.total/2;
-experiment.differenceInPromotionRates = 21/experiment.totalMale - 14/experiment.totalFemale;
+exp = {};
+exp.total = 48;
+exp.totalPromoted = 35;
+exp.totalNotPromoted = exp.total - exp.totalPromoted;
+exp.totalMale = exp.total/2;
+exp.totalFemale = exp.total/2;
+exp.differenceInPromotionRates = 21/exp.totalMale - 14/exp.totalFemale;
 
-numSimulations = 100;
-simulations = Array(numSimulations);
+sim = {};
+sim.total = 100;
+simulations = Array(sim.total);
+currentSimIndex = 0;
 
 svg = d3.select("svg");
 
@@ -208,93 +237,68 @@ function shuffle(array) {
     return array;
 }
 
-//  use d3.range([start, ]stop[, step])
-function enumerateInterval(start, stop, step){
-    array = [];
-    for(var i = start; i <= stop; i=i+step){
-        array.push(i);
-    }
-    return array;
-}
-
 var generateData = function(){
-
-    data = d3.range(experiment.total);
-
-    for(var i = 0; i < numSimulations; i++){
-
-        // generate shuffled data
+    data = d3.range(exp.total);
+    for(var i = 0; i < sim.total; i++){
         data = shuffle(data);
-
-        // assign subgroups
-        males = data.slice(0,experiment.totalMale);
-        females = data.slice(experiment.totalMale,experiment.total);
-        malesSimPromoted = males.filter(function(element) {return element < 35}).length;
-        malesSimNotPromoted = experiment.totalMale - malesSimPromoted;
-        femalesSimPromoted = experiment.totalPromoted - malesSimPromoted;
-        femalesSimNotPromoted = experiment.totalFemale - femalesSimPromoted;
-
-        // compute binding data
+        males = data.slice(0,exp.totalMale);
+        females = data.slice(exp.totalMale,exp.total);
         simData = [];
         for(var j = 0; j < data.length; j++){
-            obj = {
-                "unshuffledIndex": j,
-                "shuffledIndex": data[j],
+            simDataPoint = {
+                "unshuffledIndex": data[j],
+                "shuffledIndex": j,
                 "status": (function(index){
-                    if(index < 35){
+                    if(data[index] < 35){
                         return "promoted";
                     }
                     return "notPromoted";
-                })(data[j]),
+                })(j),
                 "gender": (function(index){
-                    if(index < 24){
+                    if(index < exp.totalMale){
                         return "male";
                     }
                     return "female";
                 })(j)
             }
-            simData.push(obj);
+            simData.push(simDataPoint);
         }
-
-        // store simulation results
-        simulationResult = {
+        maleSimPromoted = males.filter(function(element) {return element < 35}).length;
+        maleSimNotPromoted = exp.totalMale - maleSimPromoted;
+        femaleSimPromoted = exp.totalPromoted - maleSimPromoted;
+        femaleSimNotPromoted = exp.totalFemale - femaleSimPromoted;
+        simulationObject = {
             "simData": simData,
             "simMales": males,
             "simFemales": females,
-            "maleSimPromoted": malesSimPromoted,
-            "maleSimNotPromoted": malesSimNotPromoted,
-            "femaleSimPromoted": femalesSimPromoted,
-            "femaleSimNotPromoted": femalesSimNotPromoted
+            "maleSimPromoted": maleSimPromoted,
+            "maleSimNotPromoted": maleSimNotPromoted,
+            "femaleSimPromoted": femaleSimPromoted,
+            "femaleSimNotPromoted": femaleSimNotPromoted
         }
-        simulations[i] = simulationResult;
+        simulations[i] = simulationObject;
     }
 }
 generateData();
 
-
-plotWidth = 500;
-plotHeight = 200;
-
+// TODO: scale dataPointRadius to match height of tallest tower to total graph height
+plot = {}
+plot.width = 500;
+plot.height = 600;
+plot.marginLeftOffset = 100;
+plot.xAxisLabelOffset = 45;
+plot.dataPointRadius = 3;
 var initDotPlot = function(){
-    // get data for plot
+
     differences = [];
     simulations.forEach(function(simulation, index){
-        difference = simulation.maleSimPromoted/experiment.totalMale - simulation.femaleSimPromoted/experiment.totalFemale;
+        difference = simulation.maleSimPromoted/exp.totalMale - simulation.femaleSimPromoted/exp.totalFemale;
         differences.push(difference);
     })
 
     var x = d3.scale.linear()
-        .range([0, plotWidth]);
-    // range is called on a linear scale, and sets scale's ouput range
-
-    x.domain([d3.min(differences),Math.max(d3.max(differences), experiment.differenceInPromotionRates)]).nice();
-    // extent grabs min and max
-    // domain is called on a linear scale, and sets scale's input domain to go from min to max
-    // nice extends the domain so it starts and ends on nice, rounded values
-    // TODO make sure maximum more than original experiment difference, otherwise replace it.
-
-    var y = d3.scale.linear()
-        .range([plotHeight, 0]);
+        .domain([d3.min(differences),Math.max(d3.max(differences), exp.differenceInPromotionRates)]).nice()
+        .range([0, plot.width]);
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -302,33 +306,35 @@ var initDotPlot = function(){
 
     svg.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(100," + (plotHeight + 400) + ")")
+        .attr("transform", "translate(100," + plot.height+ ")")
         .call(xAxis)
     .append("text")
         .attr("class", "label graph-component")
-        .attr("x", plotWidth/2)
-        .attr("y", 45)
+        .attr("x", plot.width/2)
+        .attr("y", plot.xAxisLabelOffset)
         .style("text-anchor", "middle")
         .text("Difference in Promotion Rates");
 
-    datapointRadius = 3;
     datapoints = svg.append("g")
         .attr("class","datapoint-wrapper");
 
+    simIndex = 0;
     datapoints.selectAll(".datapoint")
         .data(differences)
         .enter()
         .append("circle")
-        .attr("class", "datapoint graph-component dot--inactive")
-        .attr("r", datapointRadius)
-        .attr("cx", function(d) { return x(d) + 100; })
-        .attr("cy", 100);
+        .attr("class", "datapoint graph-component dot--hidden")
+        .attr("id", function(){
+            return "datapoint-" + (simIndex++);
+        })
+        .attr("r", plot.dataPointRadius)
+        .attr("cx", function(d) { return x(d) + plot.marginLeftOffset; })
 
         towers = {};
-        towerStart = plotHeight + 390;
+        towerStart = plot.height - 10;
         svg.selectAll(".datapoint").each(function(d, i){
             if(towers.hasOwnProperty(d)){
-                d3.select(this).attr("cy", towerStart - 2.5 * datapointRadius * towers[d])
+                d3.select(this).attr("cy", towerStart - 2.5 * plot.dataPointRadius * towers[d])
                 towers[d] = towers[d] + 1;
             } else {
                 d3.select(this).attr("cy", towerStart)
@@ -336,55 +342,101 @@ var initDotPlot = function(){
             }
         });
 
-    //x.domain([d3.min(differences),Math.max(d3.max(differences), experiment.differenceInPromotionRates)]);
     datapoints.append("circle")
-        .attr("class", "datapoint graph-component experiment dot--inactive")
-        .attr("r", datapointRadius)
-        .attr("cx", x(experiment.differenceInPromotionRates) + 100)
-        .attr("cy", plotHeight + 400)
+        .attr("class", "datapoint graph-component experiment dot--hidden")
+        .attr("r", plot.dataPointRadius)
+        .attr("cx", x(exp.differenceInPromotionRates) + plot.marginLeftOffset)
+        .attr("cy", plot.height)
         .style("fill","red");
 
     datapoints.append("circle")
-        .attr("class","datapoint graph-component experiment dot--inactive")
-        .attr("r", datapointRadius+2)
-        .attr("cx", x(experiment.differenceInPromotionRates) + 100)
-        .attr("cy", plotHeight + 400)
+        .attr("class","datapoint graph-component experiment dot--hidden")
+        .attr("r", plot.dataPointRadius+2)
+        .attr("cx", x(exp.differenceInPromotionRates) + plot.marginLeftOffset)
+        .attr("cy", plot.height)
         .style("stroke","red")
         .style("fill","none")
 }
 initDotPlot();
 
-cardHeight = 20;
-deckWidth = 150;
-var deckX = d3.scale.ordinal()
-    .domain(d3.range(experiment.total))
-    .rangePoints([0, deckWidth]);
+var initSlider = function(){
+    $( "#slider" ).slider({
+        disabled: false,
+        max: 99,
+        min: 0,
+        step: 1,
+        slide: function(event, ui){
+            currentSimIndex = ui.value;
+            for(i = 0; i < 100; i++){
+                selection = d3.selectAll("#datapoint-" + i);
+                if(i < currentSimIndex){
+                    selection.classed("dot--hidden", false);
+                } else {
+                    selection.classed("dot--hidden", true);
+                }
+            }
+            pause();
+            stepForward(function(){})
+        }
+    });
+}
+initSlider();
+
+
+cardDeck = {};
+cardDeck.height = 20;
+cardDeck.width = 150;
+cardDeck.scale = d3.scale.ordinal()
+    .domain(d3.range(exp.total))
+    .rangePoints([0, cardDeck.width]);
 
 function shuffleTransform(d, i) {
-    return "translate(" + deckX(d.unshuffledIndex) + "," + cardHeight + ")";
+    return "translate(" + cardDeck.scale(d.shuffledIndex) + "," + cardDeck.height + ")";
 }
 function unshuffledTransform(d, i){
-    return "translate(" + deckX(d.shuffledIndex) + "," + cardHeight + ")";
+    return "translate(" + cardDeck.scale(d.unshuffledIndex) + "," + cardDeck.height + ")";
 }
 
-var step0 = function(index){
-    var deck = svg.append("g")
+var updateSimIndexCounter = function() {
+    svg.select("#currentSimIndex")
+        .text(function(){
+            displayNum = currentSimIndex + 1;
+            if(displayNum < 10){
+                return "00" + displayNum
+            } else if(displayNum < 100) {
+                return "0" + displayNum
+            }
+            return displayNum;
+        }())
+}
+
+var step0 = function(){
+    var cards = svg.append("g")
         .attr("class","unshuffled-deck simulation-component")
-        .attr("transform","translate(200,170)")
+        .attr("transform","translate(200,170)") //TODO magic numbers
     .selectAll("line")
-        .data(simulations[index].simData)
+        .data(simulations[currentSimIndex].simData)
         .enter().append("line")
         .attr("class", function(d,i) {
             return "card " + d.status + " " + d.gender;
         })
         .attr("transform", unshuffledTransform)
-        .attr("y2", -cardHeight);
+        .attr("y2", -cardDeck.height);
+
+        updateSimIndexCounter();
 }
 
-var step1 = function(index){
-    var cards = d3.selectAll(".card");
-    cards.transition()
-        .attr("transform", shuffleTransform);
+var step1 = function(duration, callback){
+    var deck = d3.selectAll(".card");
+
+    d3.transition()
+        .each(function(){
+            deck.transition()
+                .duration(duration)
+                .attr("transform", shuffleTransform)
+        })
+    .transition()
+        .each("end", callback);
 }
 
 function clone(selector) {
@@ -406,7 +458,8 @@ function getTransformCoords(transformText){
     return {"x": x, "y": y}
 }
 
-var step2 = function(index){
+//TODO magic numbers
+var step2 = function(duration, callback){
 
     var deck = cloneAll(".unshuffled-deck")
         .classed("unshuffled-deck", false)
@@ -416,158 +469,197 @@ var step2 = function(index){
         .classed("card--inactive", true)
 
     var males = deck.selectAll(".male")
-    males.each(function(d, i){
-        transformText = d3.select(this).attr("transform");
-        coords = getTransformCoords(transformText);
-        d3.select(this).attr("transform", "translate(" + (coords.x - 10) + "," + (coords.y + 30) + ")");
-    });
+    var females = deck.selectAll(".female");
 
-    var females = deck.selectAll(".female")
-    females.each(function(d, i){
-        transformText = d3.select(this).attr("transform");
-        coords = getTransformCoords(transformText);
-        d3.select(this).attr("transform", "translate(" + (coords.x + 10) + "," + (coords.y + 30) + ")");
-    });
-
+    duration = duration/2;
+    d3.transition()
+        .duration(duration)
+        .each(function(){
+            males.transition()
+                .attr("transform", function(){
+                    transformText = d3.select(this).attr("transform");
+                    coords = getTransformCoords(transformText);
+                    return "translate(" + (coords.x - 10) + "," + (coords.y + 30) + ")";
+                });
+        })
+    .transition()
+        .each(function(){
+            females.transition()
+                .attr("transform", function(){
+                    transformText = d3.select(this).attr("transform");
+                    coords = getTransformCoords(transformText);
+                    return "translate(" + (coords.x + 10) + "," + (coords.y + 30) + ")";
+                });
+        })
+    .transition()
+        .each("end", callback);
 }
 
-var fillTable = function(){
+var fillTable = function(duration, callback){
     var deck= cloneAll(".shuffled-deck")
         .classed("shuffled-deck", false)
         .classed("split-shuffled-deck", true);
 
     svg.selectAll(".shuffled-deck>line")
-        .classed("card--inactive", true)
+        .classed("card--inactive", true);
 
     var promotedMales = deck.selectAll(".male.promoted");
     var notPromotedMales = deck.selectAll(".male.notPromoted");
     var promotedFemales = deck.selectAll(".female.promoted");
     var notPromotedFemales = deck.selectAll(".female.notPromoted");
 
-    delay = 25;
-    promotedMales.transition()
-        .attr("transform", function(d, i){
-            selectionText = promotedMales[0][i];
-            transformText = d3.select(selectionText).attr("transform");
-            coords = getTransformCoords(transformText);
-            return "translate(" + (30 + i*2) + "," + (coords.y + 60) + ")";
-    }).each("end", function(){
-        notPromotedMales.transition()
-            .delay(delay)
-            .attr("transform", function(d, i){
-                selectionText = notPromotedMales[0][i];
-                transformText = d3.select(selectionText).attr("transform");
-                coords = getTransformCoords(transformText);
-                return "translate(" + (120 + i*2) + "," + (coords.y + 60) + ")";
-            }).each("end", function(){
-                promotedFemales.transition()
-                    .delay(delay)
-                    .attr("transform", function(d, i){
-                        selectionText = promotedFemales[0][i];
-                        transformText = d3.select(selectionText).attr("transform");
+    var fillTableCell = function(selection, startX, startY){
+        return function(){
+            selection.transition()
+                .attr("transform", function(d, i){
+                        transformText = d3.select(this).attr("transform");
                         coords = getTransformCoords(transformText);
-                        return "translate(" + (30 + i*2) + "," + (coords.y + 85) + ")";
-                    }).each("end", function(){
-                        notPromotedFemales.transition()
-                            .delay(delay)
-                            .attr("transform", function(d, i){
-                                selectionText = notPromotedFemales[0][i];
-                                transformText = d3.select(selectionText).attr("transform");
-                                coords = getTransformCoords(transformText);
-                                return "translate(" + (120 + i*2) + "," + (coords.y + 85) + ")";
-                            }).each("end", function(){
-                                d3.select("#simulation-step3-2").classed("disabled", false);
-                            });
+                        return "translate(" + (startX + i*2) + "," + (coords.y + startY) + ")";
                     });
-            });
-    });
+        }
+    }
+
+    // TODO magic numbers
+    duration = duration/4;
+    d3.transition()
+        .duration(duration)
+        .each(fillTableCell(promotedMales, 30, 60))
+    .transition()
+        .each(fillTableCell(notPromotedMales, 120, 60))
+    .transition()
+        .each(fillTableCell(promotedFemales, 30, 85))
+    .transition()
+        .each(fillTableCell(notPromotedFemales, 120, 85))
+    .transition()
+        .each("end", callback);
 }
 
-
-var countCards = function(index){
-    simulation = simulations[index];
+var countCards = function(){
+    simulation = simulations[currentSimIndex];
     d3.select("#maleSimPromoted").text(simulation.maleSimPromoted);
     d3.select("#femaleSimPromoted").text(simulation.femaleSimPromoted);
     d3.select("#maleSimNotPromoted").text(simulation.maleSimNotPromoted);
     d3.select("#femaleSimNotPromoted").text(simulation.femaleSimNotPromoted);
 }
 
-var computeDifference = function(index){
-    simulation = simulations[index];
+var computeDifference = function(){
+    simulation = simulations[currentSimIndex];
     d3.select("#male-numerator").text(simulation.maleSimPromoted);
     d3.select("#female-numerator").text(simulation.femaleSimPromoted);
-
-    differenceText = simulation.maleSimPromoted/experiment.totalMale - simulation.femaleSimPromoted/experiment.totalFemale + "";
+    differenceText = simulation.maleSimPromoted/exp.totalMale - simulation.femaleSimPromoted/exp.totalFemale + "";
     differenceText = differenceText.substring(0, Math.min(differenceText.indexOf(".") + 4, differenceText.length));
     d3.select("#simulatedDifference").text("= " + differenceText);
 }
 
-var step4 = function(index){
-    selection = d3.select(d3.selectAll(".datapoint")[0][index])
-        .classed("dot--inactive",false);
-    currentIndex++;
+var step3 = function(duration, callback){
+    fillTable(duration, function(){
+        countCards();
+        computeDifference();
+        callback();
+    });
 }
 
-var plotOriginalExperiment = function(){
-    d3.selectAll(".datapoint.experiment")
-        .classed("dot--inactive",false);
+var step4 = function(callback){
+    d3.select("#datapoint-" + currentSimIndex)
+        .classed("dot--hidden", false);
+    //currentSimIndex++;
+
+    $("#slider").slider("value", currentSimIndex);
+
+    callback();
 }
 
 var step5 = function(){
     d3.selectAll(".simulation-component").remove();
     d3.selectAll(".simulation-text-component").text("");
-    step0(currentIndex);
+    step0(currentSimIndex);
+}
+var resetSimulation = step5;
+
+var plotOriginalExperiment = function(){
+    d3.selectAll(".datapoint.experiment")
+        .classed("dot--hidden",false);
+}
+
+var stepForward = function(callback, duration){
+    resetSimulation();
+
+    step1(100, function(){
+        step2(100, function(){
+            step3(300, function(){
+                step4(callback);
+            })
+        })
+    });
+}
+
+paused = false;
+var pause = function(){
+    button = $("#simulation-step5-playButton");
+    button.removeClass("playing");
+    button.text("►")
+    paused = true;
+    console.log("hello")
+}
+
+var resume = function(){
+    button = $("#simulation-step5-playButton");
+    button.addClass("playing");
+    button.text("II")
+    paused = false;
+    play();
 }
 
 var play = function(){
-//     simulations.slice(currentIndex,simulations.length);
-//     for(i = currentIndex; i < numSimulations; i++){
-
-//     }
+    if(currentSimIndex == 100 || paused) return;
+    stepForward(function(){
+        currentSimIndex++;
+        play();
+    });
 }
 
-currentIndex = 0;
-
 d3.select("#simulation-step0").on("click", function(){
-    step0(currentIndex);
+    step0();
     d3.select("#simulation-step0").classed("disabled", true)
     d3.select("#simulation-step1").classed("disabled", false);
 });
 
 d3.select("#simulation-step1").on("click", function(){
-    step1(currentIndex);
+    step1(400);
     d3.select("#simulation-step1").classed("disabled", true)
     d3.select("#simulation-step2").classed("disabled", false);
 });
 
 d3.select("#simulation-step2").on("click", function(){
-    step2(currentIndex);
+    step2(400);
     d3.select("#simulation-step2").classed("disabled", true)
     d3.select("#simulation-step3-1").classed("disabled", false);
 });
 
 d3.select("#simulation-step3-1").on("click", function(){
-    fillTable();
+    fillTable(1200, function(){
+        d3.select("#simulation-step3-2").classed("disabled", false);
+    });
     d3.select("#simulation-step3-1").classed("disabled", true)
 });
 
 d3.select("#simulation-step3-2").on("click", function(){
-    countCards(currentIndex);
+    countCards();
     d3.select("#simulation-step3-2").classed("disabled", true)
     d3.select("#simulation-step3-3").classed("disabled", false)
 });
 
 d3.select("#simulation-step3-3").on("click", function(){
-    computeDifference(currentIndex);
+    computeDifference();
     d3.select("#simulation-step3-3").classed("disabled", true);
     d3.select("#simulation-step4").classed("disabled", false);
 });
 
 d3.select("#simulation-step4").on("click", function(){
-    step4(currentIndex);
+    step4(function(){});
     d3.select("#simulation-step4").classed("disabled", true);
-    d3.select("#simulation-step5").classed("disabled", false);
-    d3.select("#simulation-step5-playButton").classed("disabled", false);
+    d3.selectAll("button").classed("disabled", false);
+    $("#slider").slider("option","disabled",false);
 });
 
 d3.select("#simulation-step5").on("click", function(){
@@ -578,10 +670,11 @@ d3.select("#simulation-step5").on("click", function(){
 });
 
 d3.select("#simulation-step5-playButton").on("click", function(){
-    play(currentIndex);
-    // d3.select("#simulation-step5").classed("disabled", true);
-    // d3.select("#simulation-plotOriginal").classed("disabled", false);
-    // d3.select("#simulation-step1").classed("disabled", false);
+    if($(this).hasClass("playing")){
+        pause();
+    } else {
+        resume();
+    }
 });
 
 d3.select("#simulation-plotOriginal").on("click", function(){
