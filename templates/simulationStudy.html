@@ -24,8 +24,11 @@
         display: inline-block;
     }
     #slider {
-        margin-left: 10px;
+        margin-left: 12px;
         margin-right: 10px;
+    }
+    #simulation-step5-playButton{
+        width: 22px;
     }
     .table-line {
         stroke: black;
@@ -186,7 +189,7 @@
         <p><b> Step 5. </b> Repeat Steps (1)-(4) 100 times.
 
         <div id="step4buttonWrapper">
-            <button id="simulation-step5-playButton" type="button" class="btn btn-primary btn-xs"> ► </button>
+            <button id="simulation-step5-playButton" type="button" class="btn btn-primary btn-xs disabled"> ► </button>
             <div id="sliderWrapper"><div id="slider"></div></div>
         </div>
 
@@ -351,7 +354,7 @@ initDotPlot();
 
 var initSlider = function(){
     $( "#slider" ).slider({
-        disabled: false,
+        disabled: true,
         max: 99,
         min: 0,
         step: 1,
@@ -665,15 +668,9 @@ d3.select("#simulation-step3-3").on("click", function(){
 d3.select("#simulation-step4").on("click", function(){
     step4(function(){});
     d3.select("#simulation-step4").classed("disabled", true);
-    d3.selectAll("button").classed("disabled", false);
+    d3.select("#simulation-step5-playButton").classed("disabled",false);
     $("#slider").slider("option","disabled",false);
-});
-
-d3.select("#simulation-step5").on("click", function(){
-    step5();
-    d3.select("#simulation-step5").classed("disabled", true);
     d3.select("#simulation-plotOriginal").classed("disabled", false);
-    d3.select("#simulation-step1").classed("disabled", false);
 });
 
 d3.select("#simulation-step5-playButton").on("click", function(){
