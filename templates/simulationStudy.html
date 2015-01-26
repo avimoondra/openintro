@@ -181,11 +181,11 @@
     <div class="col-md-5 panel">
         <p> <b> Simulation </b></p>
         <p>
-        Simulate the experiment 100 times under the assumption that the null hypothesis is true, i.e. assuming there is no gender bias. Use a deck of 48 cards, each representing one resume in the study. 35 of these cards are red, denoting <font color="#F05133">promoted</font> candidates, 13 are blue, denoting <font color="#569BBD"> NOT promoted </font> candidates. <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Generate Deck </button>
-        <p> <b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs disabled"> Shuffle </button> </p>
+        Simulate the experiment 100 times under the assumption that the null hypothesis is true, i.e. assuming there is no gender bias. Use a deck of 48 cards, each representing one resume in the study. 35 of these cards are red, representing <font color="#F05133">promoted</font> candidates, and 13 are blue, representing </br> <font color="#569BBD"> NOT promoted </font> candidates. <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Generate Deck </button>
+        <p><b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs disabled"> Shuffle </button></p>
         <p><b> Step 2. </b> Split into 2 piles of 24 as to represent the completely random, non-biased promotion decisions for the 24 males and 24 females. <button id="simulation-step2" type="button" class="btn btn-primary btn-xs disabled"> Split </button></p>
-        <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of promoted files in each group, and take the difference. <button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs disabled"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs disabled"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs disabled"> Compute </button> </p>
-        <p><b> Step 4. </b> Record this value on the dot plot. <button id="simulation-step4" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> </p>
+        <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of such files in each pile, and compute the difference. </br><button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs disabled"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs disabled"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs disabled"> Compute </button> </p>
+        <p><b> Step 4. </b> Record this value on the dot plot. <button id="simulation-step4" type="button" class="btn btn-primary btn-xs disabled"> Record </button> </p>
         <p><b> Step 5. </b> Repeat Steps (1)-(4) 100 times.
 
         <div id="step4buttonWrapper">
@@ -198,7 +198,8 @@
         <div class="separator"></div>
 
         <p> <b> Results </b> </p>
-        <p>By plotting the results in a dot plot, we can see the distribution of the results from running this experiment over and over again. Where does the original experiment lie on this dot plot? <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs disabled"> Mark on dot plot </button> What does its distance away from the center tell you? Remember, the thought process is: if there was no gender bias, we would typically see results similar to the original experiment. </p>
+        <p>The dot plot shows the distribution of simulated differences. We want to compare the data from the original experiment to this distribution of simulated differences in order to gauge the likelihood of obtaining such a result if in fact the null hypothesis is true. <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs disabled"> Mark original data on plot </button> Does the original observation appear to be a likely outcome? How likely is it to obtain differences at least as extreme as the original difference if in fact the null hypothesis is true?
+        </p>
     </div>
 </div>
 
@@ -670,6 +671,7 @@ d3.select("#simulation-step4").on("click", function(){
     d3.select("#simulation-step4").classed("disabled", true);
     d3.select("#simulation-step5-playButton").classed("disabled",false);
     $("#slider").slider("option","disabled",false);
+    currentSimIndex++;
     d3.select("#simulation-plotOriginal").classed("disabled", false);
 });
 
