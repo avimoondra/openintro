@@ -8,7 +8,6 @@
     *:focus {
         outline: 0;
     }
-
     .panel {
         width: 400px;
         border-color: #808080;
@@ -20,65 +19,58 @@
         height: 1px;
         background-color: #808080;
     }
-
     #sliderWrapper {
         width: 350px;
         display: inline-block;
     }
-
     #slider {
         margin-left: 10px;
         margin-right: 10px;
     }
-
     .table-line {
         stroke: black;
         width: 1px;
     }
-
     .table-title {
         font-weight: bold;
         font-size: 20px;
     }
-
     .math-line {
         stroke: black;
         width: 1px;
     }
-
     .sim-label {
         font: 13px Monaco;
     }
-
     #currentSimIndex {
         opacity: 0.3;
         font-size: 20px;
     }
-
     svg {
         font: 15px sans-serif;
     }
-
     svg .card--inactive {
-        opacity: 0.4;
+        opacity: 0.5;
     }
-
     svg .dot--hidden {
         opacity: 0;
     }
-
     svg .card.promoted {
-        stroke: red;
+        stroke: #F05133;
     }
     svg .card.notPromoted {
-        stroke: blue;
+        stroke: #569BBD;
     }
-
     svg .axis path,
     svg .axis line {
         fill: none;
         stroke: #000;
         shape-rendering: crispEdges;
+    }
+
+
+    #maleSimPromoted {
+        opacity: 1;
     }
 </style>
 
@@ -186,7 +178,7 @@
     <div class="col-md-5 panel">
         <p> <b> Simulation </b></p>
         <p>
-        Simulate the experiment 100 times under the assumption that the null hypothesis is true, i.e. assuming there is no gender bias. Use a deck of 48 cards, each representing one resume in the study. 35 of these cards are red, denoting <font color="red">promoted</font> candidates, 13 are blue, denoting <font color="blue"> NOT promoted </font> candidates. <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Generate Deck </button>
+        Simulate the experiment 100 times under the assumption that the null hypothesis is true, i.e. assuming there is no gender bias. Use a deck of 48 cards, each representing one resume in the study. 35 of these cards are red, denoting <font color="#F05133">promoted</font> candidates, 13 are blue, denoting <font color="#569BBD"> NOT promoted </font> candidates. <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Generate Deck </button>
         <p> <b> Step 1. </b> Shuffle the deck. <button id="simulation-step1" type="button" class="btn btn-primary btn-xs disabled"> Shuffle </button> </p>
         <p><b> Step 2. </b> Split into 2 piles of 24 as to represent the completely random, non-biased promotion decisions for the 24 males and 24 females. <button id="simulation-step2" type="button" class="btn btn-primary btn-xs disabled"> Split </button></p>
         <p><b> Step 3. </b> Compute the difference in promotion rates between males and females. To do this: count the number of red cards in each pile of 24, calculate the proportion of promoted files in each group, and take the difference. <button id="simulation-step3-1" type="button" class="btn btn-primary btn-xs disabled"> Fill Table </button> <button id="simulation-step3-2" type="button" class="btn btn-primary btn-xs disabled"> Count </button> <button id="simulation-step3-3" type="button" class="btn btn-primary btn-xs disabled"> Compute </button> </p>
@@ -203,7 +195,7 @@
         <div class="separator"></div>
 
         <p> <b> Results </b> </p>
-        <p>By plotting the results in a dot plot, we can see the distribution of the results from running this experiment over and over again. Where does the original experiment lie on this dot plot? <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs disabled"> Plot </button> What does its distance away from the center tell you? Remember, the thought process is: if there was no gender bias, we would typically see results similar to the original experiment. </p>
+        <p>By plotting the results in a dot plot, we can see the distribution of the results from running this experiment over and over again. Where does the original experiment lie on this dot plot? <button id="simulation-plotOriginal" type="button" class="btn btn-primary btn-xs disabled"> Mark on dot plot </button> What does its distance away from the center tell you? Remember, the thought process is: if there was no gender bias, we would typically see results similar to the original experiment. </p>
     </div>
 </div>
 
@@ -345,14 +337,14 @@ var initDotPlot = function(){
         .attr("r", plot.dataPointRadius)
         .attr("cx", x(exp.differenceInPromotionRates) + plot.marginLeftOffset)
         .attr("cy", plot.height)
-        .style("fill","red");
+        .style("fill","#F05133");
 
     datapoints.append("circle")
         .attr("class","datapoint graph-component experiment dot--hidden")
         .attr("r", plot.dataPointRadius+2)
         .attr("cx", x(exp.differenceInPromotionRates) + plot.marginLeftOffset)
         .attr("cy", plot.height)
-        .style("stroke","red")
+        .style("stroke","#F05133")
         .style("fill","none")
 }
 initDotPlot();
@@ -532,38 +524,56 @@ var fillTable = function(duration, callback){
         .each("end", callback);
 }
 
-var countCards = function(){
-    simulation = simulations[currentSimIndex];
-    d3.select("#maleSimPromoted").text(simulation.maleSimPromoted);
-    d3.select("#femaleSimPromoted").text(simulation.femaleSimPromoted);
-    d3.select("#maleSimNotPromoted").text(simulation.maleSimNotPromoted);
-    d3.select("#femaleSimNotPromoted").text(simulation.femaleSimNotPromoted);
+var countCards = function(duration, callback){
+    d3.transition()
+        .duration(duration)
+        .each(function(){
+            simulation = simulations[currentSimIndex];
+            d3.select("#maleSimPromoted").transition()
+                .text(simulation.maleSimPromoted)
+            d3.select("#femaleSimPromoted").transition()
+                .text(simulation.femaleSimPromoted);
+            d3.select("#maleSimNotPromoted").transition()
+                .text(simulation.maleSimNotPromoted);
+            d3.select("#femaleSimNotPromoted").transition()
+                .text(simulation.femaleSimNotPromoted);
+        })
+    .transition()
+        .each("end", callback);
 }
 
-var computeDifference = function(){
-    simulation = simulations[currentSimIndex];
-    d3.select("#male-numerator").text(simulation.maleSimPromoted);
-    d3.select("#female-numerator").text(simulation.femaleSimPromoted);
-    differenceText = simulation.maleSimPromoted/exp.totalMale - simulation.femaleSimPromoted/exp.totalFemale + "";
-    differenceText = differenceText.substring(0, Math.min(differenceText.indexOf(".") + 4, differenceText.length));
-    d3.select("#simulatedDifference").text("= " + differenceText);
+var computeDifference = function(duration, callback){
+    d3.transition()
+        .duration(duration)
+        .each(function(){
+            simulation = simulations[currentSimIndex];
+            d3.select("#male-numerator")
+                .text(simulation.maleSimPromoted);
+            d3.select("#female-numerator")
+                .text(simulation.femaleSimPromoted);
+            differenceText = simulation.maleSimPromoted/exp.totalMale - simulation.femaleSimPromoted/exp.totalFemale + "";
+            differenceText = differenceText.substring(0, Math.min(differenceText.indexOf(".") + 4, differenceText.length));
+            d3.select("#simulatedDifference")
+                .text("= " + differenceText);
+        })
+    .transition()
+        .each("end", callback)
 }
 
 var step3 = function(duration, callback){
     fillTable(duration, function(){
-        countCards();
-        computeDifference();
-        callback();
+        countCards(duration, function(){
+            computeDifference(duration, function(){
+                callback();
+            });
+        });
     });
 }
 
 var step4 = function(callback){
-    d3.select("#datapoint-" + currentSimIndex)
-        .classed("dot--hidden", false);
-    //currentSimIndex++;
-
     $("#slider").slider("value", currentSimIndex);
-
+    d3.select("#datapoint-" + currentSimIndex)
+        .classed("dot--hidden", false)
     callback();
 }
 
@@ -597,7 +607,6 @@ var pause = function(){
     button.removeClass("playing");
     button.text("►")
     paused = true;
-    console.log("hello")
 }
 
 var resume = function(){
