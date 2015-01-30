@@ -61,5 +61,9 @@ def chap1_uniBiMultiModalPlots():
 def chap1_simulationStudy():
     return render_template('simulationStudy.html')
 
+@app.route('/chap2/probTree')
+def chap2_probTree():
+    return render_template('probTree.html')
+
 if __name__ == '__main__':
     app.run()
