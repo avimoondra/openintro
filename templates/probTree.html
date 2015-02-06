@@ -2,9 +2,306 @@
 {% block body %}
 
 <style type="text/css">
+    .panel {
+        width: 200px;
+        border-color: #808080;
+        padding: 10px;
+        margin-left: 30px;
+    }
+
+    .link.event1{
+        stroke: #F05133;
+    }
+    .link.event2{
+        stroke: #808080;
+    }
+
+    .link {
+      fill: none;
+    }
+
+    .step1, .step2, .step3 {
+        opacity: 1e-6;
+    }
+
 </style>
 
+<div class="row">
+    <div id="svgWrapper" class="col-md-7"></div>
+    <div class="col-md-5">
+        <div class="panel">
+            <p><b>Step 1.</b>Animate Tree I <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw Tree </button> </p>
+            <p><b>Step 2.</b>Animate Tree II <button id="animateTree-II" type="button" class="btn btn-primary btn-xs"> Draw Subtrees </button> </p>
+            <p><b>Step 3.</b> Compute joint probabilities <button id="computeJointProbs" type="button" class="btn btn-primary btn-xs"> Compute </button> </p>
+        </div>
+    </div>
+</div>
+
 <script>
+
+var margin = {top: 40, right: 100, bottom: 40, left: 100},
+      width = 800 - margin.left - margin.right,
+      height = 400 - margin.top - margin.bottom;
+
+var svg = d3.select("#svgWrapper").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+
+var red = "#F05133";
+var gray = "#808080";
+var trunkWidth = 80;
+
+var formatDecimal = function(num, numDecimals){
+    return parseFloat(Math.round(num*100)/100).toFixed(numDecimals)
+}
+
+var computeJointsNames = function(data){
+    jointsNames = [];
+    k = 0;
+    for(i = 0; i < 2; i++){
+        for(j = 0; j < 2; j++){
+            node = data.children[i]
+            jointsNames[k++] = node.eventOutcome + " and " + node.children[j].eventOutcome;
+        }
+    }
+    return jointsNames
+}
+
+var computeJoints = function(data){
+    joints = [];
+    k = 0;
+    for(i = 0; i < 2; i++){
+        for(j = 0; j < 2; j++){
+            node = data.children[i]
+            joints[k++] = node.probability*node.children[j].probability;
+        }
+    }
+    return joints;
+}
+
+var trunkToProbScale = d3.scale.linear()
+    .domain([0,trunkWidth])
+    .range([0,1])
+
+var drag = d3.behavior.drag()
+    .on("drag", function(){
+        g = d3.select(this);
+
+        mid = g.data()[0].x
+        upper = mid + trunkWidth / 2
+        lower = mid - trunkWidth / 2
+
+        topHeight = 0;
+
+        g.selectAll("rect")
+            .attr("height", function(d, i){
+                if(d3.event.y <= upper - 2  && d3.event.y >= lower + 2){
+                    if(d.position == "top"){
+                        topHeight = d3.event.y - lower
+                        return topHeight;
+                    }
+                    return upper - d3.event.y
+                }
+                return d3.select(this).attr("height")
+            })
+
+        topProb = trunkToProbScale(topHeight);
+        botProb = 1 - topProb;
+
+        currNodeData = g.data()[0]
+        currNodeData.children[0].probability = topProb;
+        currNodeData.children[1].probability = botProb;
+
+        d3.select(".gWrapper").call(graph, JSONdata)
+    });
+
+ITER = 1;
+d3.probTree = function(){
+    var width = 1,
+          height = 1,
+          trunkWidth = 1,
+          duration = 600;
+
+    var probTree = function(g, data){
+
+        var tree = d3.layout.tree()
+            .size([height, width])
+            .separation(function(a,b) {return  a.parent == b.parent ? 1 : 1;});
+
+        trunkYOffset = 12;
+        var diagonal = d3.svg.diagonal()
+            .source(function(d,i){
+                offset = trunkWidth/2 - (trunkWidth * d.target["probability"])/2;
+                if(d.target["position"] == "top"){
+                    return {x: d.source.x - offset, y: d.source.y + trunkYOffset};
+                }
+                return {x: d.source.x + offset, y: d.source.y + trunkYOffset}; })
+            .target(function(d, i){
+                return {x: d.target.x, y: d.target.y - trunkYOffset};})
+            .projection(function(d) {
+                return [d.y, d.x]; });
+
+        var nodes = tree.nodes(data),
+        links = tree.links(nodes);
+
+        var link = g.selectAll("path.link")
+            .data(links)
+
+        link.transition()
+            .ease("elastic")
+            .attr("d", diagonal)
+            .style("stroke-width", function(d, i){
+                return  d.target.probability*trunkWidth; });
+
+        link.enter().append("path")
+            .attr("class", function(d, i){
+                return d.target.linkClass; })
+            .attr("d", diagonal)
+            .style("stroke-width", function(d, i){
+                return  d.target.probability*trunkWidth; });
+
+        var node = g.selectAll(".node")
+            .data(nodes)
+        .enter().append("g")
+            .attr("class", function(d, i){
+                return d.nodeClass; })
+            .attr("transform", function(d) {
+                return "translate(" + d.y + "," + d.x + ")"; })
+
+        g.selectAll(".node.event").each(function(){
+            selection = d3.select(this).call(drag);
+
+            selection.selectAll("rect")
+                .data(selection.data()[0].children)
+            .enter().append("rect")
+                .attr("width", 20)
+                .attr("height", function(d, i){
+                    return d.probability * trunkWidth; })
+                .attr("x", -10)
+                .attr("y", -trunkWidth/2)
+                .attr("transform",function(d, i){
+                    return d["position"] == "bot" ? "scale(1,-1)" : null; })
+                .style("stroke","black")
+                .style("fill", "white")
+
+            selection.selectAll("text")
+                .data(selection.data()[0].children)
+            .enter().append("text")
+                .attr("text-anchor", "middle")
+                .attr("y", function(d){
+                    return d["position"] == "top" ? -(trunkWidth/2 + 10) : trunkWidth/2 + 10;})
+                .attr("dy", ".35em")
+                .text(function(d){
+                    return d.probability })
+
+            selection.selectAll("text")
+                .transition()
+                .text(function(d){
+                    return formatDecimal(d.probability, 2) })
+        })
+
+        if(ITER){
+            var jointNodes = g.selectAll(".node.joint")
+                .append("circle")
+            ITER--;
+        }
+
+        joints = computeJoints(JSONdata)
+        g.selectAll(".node.joint circle")
+            .transition()
+            .ease("elastic")
+            .attr("r", function(d, i){
+                return joints[i] * trunkWidth; })
+            .style("fill", function(d, i){
+                return d3.interpolateRgb(gray,red)(joints[i]); })
+
+        g.selectAll(".jointText")
+            .text(function(d, i){
+                return formatDecimal(joints[i], 3);
+            })
+    }
+
+    probTree.width = function(x) {
+        if (!arguments.length) return width;
+        width = x;
+        return probTree;
+    };
+
+    probTree.height = function(x) {
+        if (!arguments.length) return height;
+        height = x;
+        return probTree;
+    };
+
+    probTree.trunkWidth = function(x) {
+        if (!arguments.length) return trunkWidth;
+        trunkWidth = x;
+        return probTree;
+    };
+
+    return probTree;
+}
+
+var animateTree = function(step){
+    return function(){
+        d3.selectAll(".node." + step)
+            .transition()
+            .ease("linear")
+            .style("opacity", 1);
+
+        d3.selectAll(".link." + step)
+            .attr("stroke-dasharray", function(){
+                return this.getTotalLength() + " " + this.getTotalLength(); })
+            .attr("stroke-dashoffset", function() { return this.getTotalLength(); })
+        .transition()
+            .duration(1000)
+            .ease("linear")
+            .attr("stroke-dashoffset", 0)
+            .style("opacity", 1)
+    }
+}
+
+var animateJoints = function(){
+    d3.selectAll(".node.joint")
+        .transition()
+        .ease("linear")
+        .style("opacity", 1)
+
+    jointsNames = computeJointsNames(JSONdata);
+    d3.selectAll(".node.joint")
+        .each(function(d, i){
+            d3.select(this)
+                .append("text")
+                .attr("x", -30)
+                .attr("y", -20)
+                .attr("text-anchor","start")
+                .text("P(" + jointsNames[i] + ") = ")
+            .append("tspan")
+                .attr("class","jointText")
+                .text(function(){
+                    return formatDecimal(joints[i], 3);
+                })
+        })
+}
+
+var graph = d3.probTree()
+        .width(width)
+        .height(height)
+        .trunkWidth(trunkWidth);
+
+JSONdata = {};
+d3.json("/static/data/02/probTree.json", function(error, data) {
+    JSONdata = data;
+    var g = svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "gWrapper")
+        .call(graph, data)
+
+    d3.select("#animateTree-I").on("click", animateTree("step1"))
+    d3.select("#animateTree-II").on("click", animateTree("step2"))
+    d3.select("#computeJointProbs").on("click", animateJoints);
+});
+
 </script>
 
 {% endblock %}
