@@ -1,58 +1,65 @@
 {
-    "name": "event1",
-    "nodeClass": "node event step1",
-    "children": [
-        {
-            "name": "event",
-            "position": "top",
-            "nodeClass": "node event step2",
-            "linkClass": "link event1 step1",
-            "eventOutcome": "yes",
-            "probability": 0.10,
-            "children": [
-                {
-                    "name": "joint",
-                    "probability": 0.75,
-                    "position": "top",
-                    "nodeClass": "node joint step3",
-                    "linkClass": "link event2 step2",
-                    "eventOutcome": "+"
-                },
-                {
-                    "name": "joint",
-                    "position": "bot",
-                    "nodeClass": "node joint step3",
-                    "linkClass": "link event2 step2",
-                    "probability": 0.25,
-                    "eventOutcome": "-"
-                }
-            ]
+    "meta": {
+        "dataset": "fakedata",
+        "event1": "Question 1?",
+        "event2": "Question 2?"
         },
-        {
-            "name": "event",
-            "position": "bot",
-            "nodeClass": "node event step2",
-            "linkClass": "link event1 step1",
-            "probability": 0.90,
-            "eventOutcome": "no",
-            "children": [
-                {
-                    "name": "joint",
-                    "probability": 0.15,
-                    "position": "top",
-                    "nodeClass": "node joint step3",
-                    "linkClass": "link event2 step2",
-                    "eventOutcome": "+"
-                },
-                {
-                    "name": "joint",
-                    "position": "bot",
-                    "nodeClass": "node joint step3",
-                    "linkClass": "link event2 step2",
-                    "probability": 0.85,
-                    "eventOutcome": "-"
-                }
-            ]
-        }
-    ]
+    "tree": {
+        "name": "event",
+        "nodeClass": "node event step1",
+        "children": [
+            {
+                "name": "event",
+                "position": "top",
+                "nodeClass": "node event step2",
+                "linkClass": "link event1 step1",
+                "eventOutcome": "yes",
+                "probability": 0.10,
+                "children": [
+                    {
+                        "name": "joint",
+                        "probability": 0.75,
+                        "position": "top",
+                        "nodeClass": "node joint step3",
+                        "linkClass": "link event2 step2",
+                        "eventOutcome": "+"
+                    },
+                    {
+                        "name": "joint",
+                        "position": "bot",
+                        "nodeClass": "node joint step3",
+                        "linkClass": "link event2 step2",
+                        "probability": 0.25,
+                        "eventOutcome": "-"
+                    }
+                ]
+            },
+            {
+                "name": "event",
+                "position": "bot",
+                "nodeClass": "node event step2",
+                "linkClass": "link event1 step1",
+                "probability": 0.90,
+                "eventOutcome": "no",
+                "children": [
+                    {
+                        "name": "joint",
+                        "probability": 0.15,
+                        "position": "top",
+                        "nodeClass": "node joint step3",
+                        "linkClass": "link event2 step2",
+                        "eventOutcome": "+"
+                    },
+                    {
+                        "name": "joint",
+                        "position": "bot",
+                        "nodeClass": "node joint step3",
+                        "linkClass": "link event2 step2",
+                        "probability": 0.85,
+                        "eventOutcome": "-"
+                    }
+                ]
+            }
+        ]
+    }
 }
