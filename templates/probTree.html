@@ -15,15 +15,16 @@
     .link.event2{
         stroke: #808080;
     }
-
     .link {
       fill: none;
     }
-
     .step1, .step2, .step3 {
         opacity: 1e-6;
     }
-
+    .question {
+        font-size: 16px;
+        font-weight: bold;
+    }
 </style>
 
 <div class="row">
@@ -42,7 +43,7 @@
 
 var margin = {top: 40, right: 100, bottom: 40, left: 70},
       width = 800 - margin.left - margin.right,
-      height = 800 - margin.top - margin.bottom;
+      height = 600 - margin.top - margin.bottom;
 
 var svg = d3.select("#svgWrapper").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -54,6 +55,9 @@ var red = "#F05133",
 var trunkWidth = 80,
       graphWidth = width - 100,
       graphHeight = height - 400;
+
+var TREEDATA = {},
+      METADATA = {};
 
 var formatDecimal = function(num, numDecimals){
     return parseFloat(Math.round(num*100)/100).toFixed(numDecimals)
@@ -305,6 +309,11 @@ d3.probTree = function(){
 
 var animateTree = function(step){
     return function(){
+        d3.select(".question." + step)
+            .transition()
+            .ease("linear")
+            .style("opacity", 1)
+
         d3.selectAll(".node." + step)
             .transition()
             .ease("linear")
@@ -340,11 +349,6 @@ var animateJoints = function(){
         })
 }
 
-function clone(selector) {
-    var node = d3.select(selector).node();
-    return d3.select(node.parentNode.insertBefore(node.cloneNode(true), node.nextSibling));
-}
-
 function cloneAll(selector) {
     var nodes = d3.selectAll(selector);
     nodes.each(function(d, i) {
@@ -354,7 +358,6 @@ function cloneAll(selector) {
 }
 
 var animateBayes = function(){
-
 }
 
 var graph = d3.probTree()
@@ -362,15 +365,24 @@ var graph = d3.probTree()
         .height(graphHeight)
         .trunkWidth(trunkWidth);
 
-TREEDATA = {};
-METADATA = {};
 d3.json("/static/data/02/probTree.json", function(error, data) {
     TREEDATA = data.tree;
-    METADATA = data.meta
+    METADATA = data.meta;
     var g = svg.append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .attr("class", "gWrapper")
         .call(graph, TREEDATA)
+
+    svg.select(".gWrapper").selectAll("text.question")
+        .data([1, 0])
+    .enter().append("text")
+        .attr("text-anchor", "middle")
+        .attr("class", function(d, i){
+            return d ? "step1 question" : "step2 question"})
+        .attr("x", function(d, i){
+            return d ? 0 : (graphWidth/2)})
+        .text(function(d, i){
+            return d ? METADATA["event1"] : METADATA["event2"] })
 
     d3.select("#animateTree-I").on("click", animateTree("step1"))
     d3.select("#animateTree-II").on("click", animateTree("step2"))
