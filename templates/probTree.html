@@ -18,7 +18,7 @@
     .link {
       fill: none;
     }
-    .step1, .step2, .step3 {
+    .step1, .step2 {
         opacity: 1e-6;
     }
     .question {
@@ -62,35 +62,6 @@ var TREEDATA = {},
 var formatDecimal = function(num, numDecimals){
     return parseFloat(Math.round(num*100)/100).toFixed(numDecimals)
 }
-
-// TODO FOR ALTERNATE DISPLAY
-// function wrap(text, width) {
-//     displacedHeight = 0;
-//     text.each(function() {
-//         var text = d3.select(this),
-//                 words = text.text().split(/\s+/).reverse(),
-//                 word,
-//                 line = [],
-//                 lineNumber = 0,
-//                 lineHeight = 1.1, // ems
-//                 x = text.attr("x"),
-//                 y = text.attr("y"),
-//                 dy = parseFloat(text.attr("dy")),
-//                 tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
-//         while (word = words.pop()) {
-//             line.push(word);
-//             tspan.text(line.join(" "));
-//             if (tspan.node().getComputedTextLength() > width) {
-//                 line.pop();
-//                 tspan.text(line.join(" "));
-//                 line = [word];
-//                 tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-//             }
-//         }
-//         text.data([this.getBoundingClientRect()]);
-//     });
-//     return displacedHeight;
-// }
 
 var computeJointsNames = function(data){
     jointsNames = [];
@@ -183,24 +154,21 @@ d3.probTree = function(){
                 return [d.y, d.x]; });
 
         var nodes = tree.nodes(data),
-        links = tree.links(nodes);
+              links = tree.links(nodes);
 
         var link = g.selectAll("path.link")
             .data(links)
-
-        link.transition()
-            .ease("elastic")
-            .attr("d", diagonal)
-            .attr("stroke-dasharray", function(){
-                pathLength = this.getTotalLength();
-                return  pathLength + " " + pathLength; })
-            .style("stroke-width", function(d, i){
-                return  d.target.probability*trunkWidth; });
-
         link.enter().append("path")
             .attr("class", function(d, i){
                 return d.target.linkClass; })
             .attr("d", diagonal)
+            .style("stroke-width", function(d, i){
+                return  d.target.probability*trunkWidth; });
+        link
+            .attr("d", diagonal)
+            .attr("stroke-dasharray", function(){
+                pathLength = this.getTotalLength();
+                return  pathLength + " " + pathLength; })
             .style("stroke-width", function(d, i){
                 return  d.target.probability*trunkWidth; });
 
@@ -236,10 +204,9 @@ d3.probTree = function(){
                     return d["position"] == "top" ? -(trunkWidth/2 + 10) : trunkWidth/2 + 10;})
                 .attr("dy", ".35em")
                 .text(function(d){
-                    return d.name == "joint" ?
-                        "P( " + d.eventOutcome + " | " + d.parent.eventOutcome + " ) = " :
-                        "P( " + d.eventOutcome + " ) = ";
-                })
+                    return d.name == "joint"
+                        ? "P( " + d.eventOutcome + " | " + d.parent.eventOutcome + " ) = "
+                        : "P( " + d.eventOutcome + " ) = "; })
             .append("tspan")
                 .attr("class","eventText")
 
@@ -249,42 +216,16 @@ d3.probTree = function(){
                     return formatDecimal(d.probability, 2) })
         })
 
-        // TODO fix
-        if(ITER){
-            var jointNodes = g.selectAll(".node.joint")
-                .append("circle")
-            ITER--;
-        }
-
-        joints = computeJoints(TREEDATA)
-        g.selectAll(".node.joint circle")
-            .transition()
-            .ease("elastic")
-            .attr("r", function(d, i){
-                return joints[i].jointPr * trunkWidth; })
-            .style("fill", function(d, i){
-                return d3.interpolateRgb(gray,red)(joints[i].jointPr); })
-
-        // TODO ALTERNATE DISPLAY
-        // jointsNames = computeJointsNames(TREEDATA);
-        // g.selectAll("text.jointText")
-        //     .attr("dy",'0.71em')
-        //     .attr("x", 70)
-        //     .text(function(d, i){
-        //         pr = formatDecimal(joints[i].pr, 2)
-        //         conditionalPr = formatDecimal(joints[i].conditionalPr, 2)
-        //         jointPr = formatDecimal(joints[i].jointPr, 2)
-        //         return "P( " + jointsNames[i] + ") = " + pr + " × " + conditionalPr  + " = " + jointPr;
-        //     })
-        //     .call(wrap, 120)
-
-        g.selectAll("text.jointText")
-            .attr("x", 60) //TODO MAGIC NUMBER
-            .attr("text-anchor","start")
-            .text(function(d, i){
-                return "P( " + jointsNames[i] + " ) = " + formatDecimal(joints[i].jointPr, 2)
-            })
-
+        joints = computeJoints(TREEDATA);
+        var circle = g.selectAll(".node.joint").selectAll("circle")
+            .data(function(d, i){
+                return [i]; })
+        circle.enter().append("circle")
+        circle
+            .attr("r", function(d){
+                return joints[d].jointPr * trunkWidth; })
+            .attr("fill", function(d){
+                return d3.interpolateRgb(gray,red)(joints[d].jointPr); })
     }
 
     probTree.width = function(x) {
@@ -337,17 +278,6 @@ var animateJoints = function(){
         .transition()
         .ease("linear")
         .style("opacity", 1)
-
-    jointsNames = computeJointsNames(TREEDATA);
-    d3.selectAll(".node.joint")
-        .each(function(d, i){
-            d3.select(this)
-                .append("text")
-                .attr("class","jointText")
-                .attr("x", 60) //TODO MAGIC NUMBER
-                .attr("text-anchor","start")
-                .text("P( " + jointsNames[i] + " ) = " + formatDecimal(joints[i].jointPr, 2))
-        })
 }
 
 function cloneAll(selector) {
@@ -359,6 +289,7 @@ function cloneAll(selector) {
 }
 
 var animateBayes = function(){
+
 }
 
 var graph = d3.probTree()
