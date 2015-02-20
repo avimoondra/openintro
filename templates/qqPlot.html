@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script src="../static/js/jstat.js"></script>
+
+<style type="text/css">
+    .panel {
+        width: 200px;
+        border-color: #808080;
+        padding: 10px;
+        margin-left: 30px;
+    }
+
+    svg {
+      font: 14px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .dot {
+      stroke: #569BBD;
+      fill: none;
+    }
+
+    .line {
+        fill: none;
+        stroke: #000;
+    }
+</style>
+
+<div class="row">
+    <div id="svgWrapper" class="col-md-7"></div>
+    <div class="col-md-5">
+        <div class="panel">
+            <p>Hello world</p>
+        </div>
+    </div>
+</div>
+
+<script>
+
+var ppoints = function(n, a){
+    a = a || (n <= 10 ? 3/8 : 1/2)
+    return d3.range(1,n+1).map(function(d, i){
+        return (d - a)/(n + (1 - a) - a)
+    });
+}
+
+var preprocessData = function(data){
+    data.forEach(function(d) {
+        d["height"] = +d["heights"];
+        delete d["heights"]
+    });
+    data.sort(function(a, b){
+        if (a["height"] < b["height"]) {
+            return -1
+        }
+        if (a["height"] > b['height']) {
+            return 1;
+        } return 0;
+    });
+    percentiles = ppoints(data.length);
+    data.forEach(function(d, i) {
+        d["percentile"] = percentiles[i];
+        d["theoreticalQuantile"] = jStat.normal.inv(d["percentile"],0,1);
+    })
+    return data;
+}
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom,
+      dotPlotWidth = 160,
+      scatterPlotWidth = width - dotPlotWidth;
+
+var svg = d3.select("#svgWrapper").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var data = [];
+
+d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
+    data = preprocessData(dat);
+
+    var xValue = function(d) { return d["theoreticalQuantile"]; },
+          xScale = d3.scale.linear()
+            .domain(d3.extent(data, xValue)).nice()
+            .range([dotPlotWidth, scatterPlotWidth]),
+          xMap = function(d) { return xScale(xValue(d)); },
+          xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+    var yValue = function(d) { return d["height"]; },
+          yScale = d3.scale.linear()
+            .domain(d3.extent(data, yValue)).nice()
+            .range([height, 0]),
+          yMap = function(d) { return yScale(yValue(d)); },
+          yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+    // scatter
+
+    svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("x", scatterPlotWidth)
+          .attr("y", -6)
+          .style("text-anchor", "end")
+          .text("Theoretical Quantiles");
+
+      svg.append("g")
+          .attr("class", "y axis")
+          .attr("transform", "translate(" + dotPlotWidth + ",0)")
+          .call(yAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Heights (in)")
+
+      svg.selectAll(".dot")
+          .data(data)
+        .enter().append("circle")
+          .attr("class", "dot")
+          .attr("r", 3.5)
+          .attr("cx", function(d) { return xMap(d); })
+          .attr("cy", function(d) { return yMap(d); })
+
+    // line
+
+    var line = d3.svg.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .interpolate("linear");
+
+    mean = jStat.mean(data.map(yValue));
+    stdev = jStat.stdev(data.map(yValue));
+    minX = d3.min(data, xValue);
+    maxX = d3.max(data, xValue);
+
+    lineData = [
+        {"x": xScale(maxX), "y": yScale(mean + stdev * maxX)},
+        {"x": xScale(minX), "y": yScale(mean - stdev * maxX)}]
+
+    svg.append("path")
+        .attr("class", "line")
+        .attr("d", line(lineData))
+        .style("stroke-dasharray", ("3, 3"));
+
+    // dot plot
+
+    datapointRadius = 3.5;
+    svg.selectAll(".dotPlot .dot")
+        .data(data)
+    .enter().append("circle")
+        .attr("class", "dotPlot dot")
+        .attr("r", datapointRadius)
+        .attr("cx", margin.left)
+        .attr("cy", yMap)
+        .style("opacity","0.5")
+
+    towers = {};
+    towerStart = dotPlotWidth - margin.left;
+    svg.selectAll(".dotPlot.dot").each(function(d, i){
+        if(towers.hasOwnProperty(yValue(d))){
+            d3.select(this).attr("cx", towerStart - 2.5 * datapointRadius * towers[yValue(d)])
+            towers[yValue(d)] = towers[yValue(d)] + 1;
+        } else {
+            d3.select(this).attr("cx", towerStart)
+            towers[yValue(d)] = 1;
+        }
+    });
+
+});
+
+</script>
+
+{% endblock %}

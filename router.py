@@ -65,5 +65,9 @@ def chap1_simulationStudy():
 def chap2_probTree():
     return render_template('probTree.html')
 
+@app.route('/chap3/qqPlot')
+def chap3_qqPlot():
+    return render_template('qqPlot.html')
+
 if __name__ == '__main__':
     app.run()
