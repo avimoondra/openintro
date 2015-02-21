@@ -136,9 +136,13 @@ d3.probTree = function(){
 
     var probTree = function(g, data){
 
+        // tree
+
         var tree = d3.layout.tree()
             .size([height, width])
             .separation(function(a,b) {return  a.parent == b.parent ? 1 : 1;});
+
+        // links
 
         trunkYOffset = 12;
         var diagonal = d3.svg.diagonal()
@@ -171,6 +175,8 @@ d3.probTree = function(){
                 return  pathLength + " " + pathLength; })
             .style("stroke-width", function(d, i){
                 return  d.target.probability*trunkWidth; });
+
+        // nodes
 
         var node = g.selectAll(".node")
             .data(nodes)
@@ -216,6 +222,8 @@ d3.probTree = function(){
                     return formatDecimal(d.probability, 2) })
         })
 
+        // joint nodes
+
         joints = computeJoints(TREEDATA);
         var circle = g.selectAll(".node.joint").selectAll("circle")
             .data(function(d, i){
@@ -226,6 +234,17 @@ d3.probTree = function(){
                 return joints[d].jointPr * trunkWidth; })
             .attr("fill", function(d){
                 return d3.interpolateRgb(gray,red)(joints[d].jointPr); })
+
+        jointsNames = computeJointsNames(TREEDATA)
+        var text = g.selectAll(".node.joint").selectAll("text")
+            .data(function(d, i){
+                return [i]; })
+        text.enter().append("text")
+            .attr("class", "jointText")
+            .attr("x", 60) //TODO MAGIC NUMBER
+            .attr("text-anchor","start")
+        text.text(function(d){
+            return "P( " + jointsNames[d] + " ) = " + formatDecimal(joints[d].jointPr, 2) })
     }
 
     probTree.width = function(x) {
@@ -278,7 +297,7 @@ var animateJoints = function(){
         .transition()
         .ease("linear")
         .style("opacity", 1)
-}
+  }
 
 function cloneAll(selector) {
     var nodes = d3.selectAll(selector);
@@ -297,15 +316,8 @@ var graph = d3.probTree()
         .height(graphHeight)
         .trunkWidth(trunkWidth);
 
-d3.json("/static/data/02/probTree.json", function(error, data) {
-    TREEDATA = data.tree;
-    METADATA = data.meta;
-    var g = svg.append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-        .attr("class", "gWrapper")
-        .call(graph, TREEDATA)
-
-    svg.select(".gWrapper").selectAll("text.question")
+var questionLabels = function(g){
+    g.selectAll("text.question")
         .data([1, 0])
     .enter().append("text")
         .attr("text-anchor", "middle")
@@ -315,6 +327,18 @@ d3.json("/static/data/02/probTree.json", function(error, data) {
             return d ? 0 : (graphWidth/2)})
         .text(function(d, i){
             return d ? METADATA["event1"] : METADATA["event2"] })
+}
+
+d3.json("/static/data/02/probTree.json", function(error, data) {
+
+    TREEDATA = data.tree;
+    METADATA = data.meta;
+
+    var g = svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "gWrapper")
+        .call(graph, TREEDATA)
+    svg.select(".gWrapper").call(questionLabels)
 
     d3.select("#animateTree-I").on("click", animateTree("step1"))
     d3.select("#animateTree-II").on("click", animateTree("step2"))
