@@ -8,7 +8,6 @@
         padding: 10px;
         margin-left: 30px;
     }
-
     .link.event1{
         stroke: #F05133;
     }
@@ -18,17 +17,50 @@
     .link {
       fill: none;
     }
-    .step1, .step2, .step3 {
+    .step1, .step2, .step3, .mathg {
         opacity: 1e-6;
     }
     .question {
         font-size: 16px;
         font-weight: bold;
     }
+    .math-line {
+        stroke: black;
+        width: 1px;
+    }
+    .mathg text{
+        text-anchor: middle;
+    }
 </style>
 
 <div class="row">
-    <div id="svgWrapper" class="col-md-7"></div>
+    <div id="svgWrapper" class="col-md-7">
+        <svg>
+            <g class="mathg" transform="translate(50,500)">
+                <text x="10" y="0"> P( yes | +) = </text>
+                <g transform="translate(160,-10)">
+                    <text> P(yes and +) </text>
+                    <line class="math-line" x1="-100" y1="6" x2="100" y2="6"></line>
+                    <text y="20"> P( yes and + ) + P( no and +) </text>
+                </g>
+                <text x="275"> = </text>
+                <g transform="translate(460,-10)">
+                    <g id="flippedPr" class="bayesVis">
+                        <circle cy="-50" class="circle-0"></circle>
+                    </g>
+                    <g id="LawOfTotalPr" class="bayesVis" transform="translate(0,60)">
+                        <circle cx="-60" class="circle-0"></circle>
+                        <circle cx="60" class="circle-2"></circle>
+                        <text>+</text>
+                    </g>
+                    <line class="math-line" x1="-165" y1="6" x2="165" y2="6"></line>
+                </g>
+                <g transform="translate(655,0)">
+                    <text>≈ <tspan id="bayesCalc"></tspan></text>
+                </g>
+            </g>
+        </svg>
+    </div>
     <div class="col-md-5">
         <div class="panel">
             <p><b>Step 1.</b>Animate Tree I <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw Tree </button> </p>
@@ -45,7 +77,7 @@ var margin = {top: 40, right: 100, bottom: 40, left: 70},
       width = 800 - margin.left - margin.right,
       height = 800 - margin.top - margin.bottom;
 
-var svg = d3.select("#svgWrapper").append("svg")
+var svg = d3.select("#svgWrapper").select("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
 
@@ -58,6 +90,24 @@ var trunkWidth = 80,
 
 var TREEDATA = {},
       METADATA = {};
+
+var dispatch = d3.dispatch("statechange")
+
+dispatch.on("statechange.joints", function(joints){
+    index = 0;
+    d3.selectAll("g.bayesVis>.circle-" + index)
+        .attr("r", joints[index].jointPr * trunkWidth)
+        .attr("fill", d3.interpolateRgb(gray,red)(joints[index].jointPr));
+
+    index = 2;
+    d3.selectAll("g.bayesVis>.circle-" + index)
+        .attr("r", joints[index].jointPr * trunkWidth)
+        .attr("fill", d3.interpolateRgb(gray,red)(joints[index].jointPr));
+
+    calc = joints[0].jointPr/(joints[0].jointPr + joints[2].jointPr)
+    d3.select("#bayesCalc")
+        .text(formatDecimal(calc, 3))
+})
 
 var formatDecimal = function(num, numDecimals){
     return parseFloat(Math.round(num*100)/100).toFixed(numDecimals)
@@ -127,7 +177,6 @@ var drag = d3.behavior.drag()
         d3.select(".gWrapper").call(graph, TREEDATA)
     });
 
-ITER = 1;
 d3.probTree = function(){
     var width = 1,
           height = 1,
@@ -229,11 +278,14 @@ d3.probTree = function(){
             .data(function(d, i){
                 return [i]; })
         circle.enter().append("circle")
+            .attr("class",function(d, i){ return "circle-" + d; })
         circle
             .attr("r", function(d){
                 return joints[d].jointPr * trunkWidth; })
             .attr("fill", function(d){
                 return d3.interpolateRgb(gray,red)(joints[d].jointPr); })
+
+        dispatch.statechange(joints);
 
         jointsNames = computeJointsNames(TREEDATA)
         var text = g.selectAll(".node.joint").selectAll("text")
@@ -299,16 +351,11 @@ var animateJoints = function(){
         .style("opacity", 1)
   }
 
-function cloneAll(selector) {
-    var nodes = d3.selectAll(selector);
-    nodes.each(function(d, i) {
-        nodes[0][i] = this.parentNode.insertBefore(this.cloneNode(true), this.nextSibling);
-    });
-    return nodes;
-}
-
 var animateBayes = function(){
-
+    d3.selectAll(".mathg")
+        .transition()
+        .ease("linear")
+        .style("opacity", 1)
 }
 
 var graph = d3.probTree()
@@ -338,7 +385,7 @@ d3.json("/static/data/02/probTree.json", function(error, data) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         .attr("class", "gWrapper")
         .call(graph, TREEDATA)
-    svg.select(".gWrapper").call(questionLabels)
+        .call(questionLabels)
 
     d3.select("#animateTree-I").on("click", animateTree("step1"))
     d3.select("#animateTree-II").on("click", animateTree("step2"))
