@@ -4,29 +4,20 @@
 <script src="../static/js/jstat.js"></script>
 
 <style type="text/css">
-    .panel {
-        width: 200px;
-        border-color: #808080;
-        padding: 10px;
-        margin-left: 30px;
-    }
-
     svg {
       font: 14px sans-serif;
     }
-
     .axis path,
     .axis line {
         fill: none;
         stroke: #000;
         shape-rendering: crispEdges;
     }
-
     .dot {
       stroke: #569BBD;
-      fill: none;
+      stroke-width: 2;
+      fill: white;
     }
-
     .line {
         fill: none;
         stroke: #000;
@@ -35,11 +26,6 @@
 
 <div class="row">
     <div id="svgWrapper" class="col-md-7"></div>
-    <div class="col-md-5">
-        <div class="panel">
-            <p>Hello world</p>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -79,20 +65,26 @@ var margin = {top: 20, right: 20, bottom: 30, left: 40},
       scatterPlotWidth = width - dotPlotWidth;
 
 var svg = d3.select("#svgWrapper").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+
+svg.append("g")
+    .attr("class","dotPlot")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("g")
+    .attr("class","scatterPlot")
+    .attr("transform", "translate(" + (margin.left + dotPlotWidth) + "," + margin.top + ")");
 
 var data = [];
 
-d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
-    data = preprocessData(dat);
+d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
+    data = preprocessData(csv);
 
     var xValue = function(d) { return d["theoreticalQuantile"]; },
           xScale = d3.scale.linear()
             .domain(d3.extent(data, xValue)).nice()
-            .range([dotPlotWidth, scatterPlotWidth]),
+            .range([0, scatterPlotWidth]),
           xMap = function(d) { return xScale(xValue(d)); },
           xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
@@ -105,36 +97,40 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
 
     // scatter
 
-    svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(xAxis)
-        .append("text")
-          .attr("class", "label")
-          .attr("x", scatterPlotWidth)
-          .attr("y", -6)
-          .style("text-anchor", "end")
-          .text("Theoretical Quantiles");
+    scatterPlot = svg.select("g.scatterPlot")
 
-      svg.append("g")
-          .attr("class", "y axis")
-          .attr("transform", "translate(" + dotPlotWidth + ",0)")
-          .call(yAxis)
-        .append("text")
-          .attr("class", "label")
-          .attr("transform", "rotate(-90)")
-          .attr("y", 6)
-          .attr("dy", ".71em")
-          .style("text-anchor", "end")
-          .text("Heights (in)")
+    scatterPlot.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+    .append("text")
+        .attr("class", "label")
+        .attr("x", scatterPlotWidth)
+        .attr("y", -6)
+        .style("text-anchor", "end")
+        .text("Theoretical Quantiles");
 
-      svg.selectAll(".dot")
-          .data(data)
-        .enter().append("circle")
-          .attr("class", "dot")
-          .attr("r", 3.5)
-          .attr("cx", function(d) { return xMap(d); })
-          .attr("cy", function(d) { return yMap(d); })
+    scatterPlot.append("g")
+        .attr("class", "y axis")
+        //.attr("transform", "translate(" + dotPlotWidth + ",0)")
+        .call(yAxis)
+    .append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Heights (in)")
+
+    scatterPlot.selectAll(".scatterPlot .dot")
+        .data(data)
+    .enter().append("circle")
+        .attr("class", function(d, i){
+            console.log(i)
+            return "scatterPlot dot data-" + i })
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return xMap(d); })
+        .attr("cy", function(d) { return yMap(d); })
 
     // line
 
@@ -152,7 +148,7 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
         {"x": xScale(maxX), "y": yScale(mean + stdev * maxX)},
         {"x": xScale(minX), "y": yScale(mean - stdev * maxX)}]
 
-    svg.append("path")
+    scatterPlot.append("path")
         .attr("class", "line")
         .attr("d", line(lineData))
         .style("stroke-dasharray", ("3, 3"));
@@ -160,10 +156,13 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
     // dot plot
 
     datapointRadius = 3.5;
-    svg.selectAll(".dotPlot .dot")
+
+    dotPlot = svg.select("g.dotPlot");
+    dotPlot.selectAll(".dotPlot .dot")
         .data(data)
     .enter().append("circle")
-        .attr("class", "dotPlot dot")
+        .attr("class", function(d, i){
+            return "dotPlot dot data-" + i })
         .attr("r", datapointRadius)
         .attr("cx", margin.left)
         .attr("cy", yMap)
@@ -171,7 +170,7 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
 
     towers = {};
     towerStart = dotPlotWidth - margin.left;
-    svg.selectAll(".dotPlot.dot").each(function(d, i){
+    dotPlot.selectAll(".dotPlot.dot").each(function(d, i){
         if(towers.hasOwnProperty(yValue(d))){
             d3.select(this).attr("cx", towerStart - 2.5 * datapointRadius * towers[yValue(d)])
             towers[yValue(d)] = towers[yValue(d)] + 1;
@@ -181,6 +180,22 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, dat) {
         }
     });
 
+    // highlighting points
+    expand = function(d, i){
+        d3.selectAll(".dot.data-" + i)
+            .attr("r", datapointRadius*3)
+    }
+    shrink = function(d, i){
+        d3.selectAll(".dot.data-" + i)
+            .attr("r", datapointRadius)
+    }
+
+    d3.selectAll(".scatterPlot.dot")
+        .on("mouseenter", expand)
+        .on("mouseleave", shrink);
+    d3.selectAll(".dotPlot.dot")
+        .on("mouseenter", expand)
+        .on("mouseleave", shrink);
 });
 
 </script>
