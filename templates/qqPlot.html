@@ -33,26 +33,26 @@
 
 <script>
 
-var cloneAll = function(selector){
+var cloneAll = function(selector) {
     var nodes = d3.selectAll(selector);
-    nodes.each(function(d, i){
+    nodes.each(function(d, i) {
         nodes[0][i] = this.parentNode.insertBefore(this.cloneNode(true), this.nextSibling); });
     return nodes;
 }
 
 // https://stat.ethz.ch/R-manual/R-patched/library/stats/html/ppoints.html
-var ppoints = function(n, a){
+var ppoints = function(n, a) {
     a = a || (n <= 10 ? 3/8 : 1/2);
-    return d3.range(1,n+1).map(function(d, i){
+    return d3.range(1,n+1).map(function(d, i) {
         return (d - a)/(n + (1 - a) - a);
     });
 }
 
-var preprocessData = function(data){
+var preprocessData = function(data) {
     data.forEach(function(d) {
         d["height"] = +d["heights"];
         delete d["heights"]; });
-    data.sort(function(a, b){
+    data.sort(function(a, b) {
         return d3.ascending(a["height"], b["height"]); });
     percentiles = ppoints(data.length);
     data.forEach(function(d, i) {
@@ -127,7 +127,7 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
     scatterPlot.selectAll(".scatterPlot .dot")
         .data(data)
     .enter().append("circle")
-        .attr("class", function(d, i){
+        .attr("class", function(d, i) {
             console.log(i)
             return "scatterPlot dot data-" + i })
         .attr("r", 3.5)
@@ -163,7 +163,7 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
     dotPlot.selectAll(".dotPlot .dot")
         .data(data)
     .enter().append("circle")
-        .attr("class", function(d, i){
+        .attr("class", function(d, i) {
             return "dotPlot dot data-" + i; })
         .attr("r", datapointRadius)
         .attr("cx", margin.left)
@@ -172,8 +172,8 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
 
     towers = {};
     towerStart = dotPlotWidth - margin.left;
-    dotPlot.selectAll(".dotPlot.dot").each(function(d, i){
-        if(towers.hasOwnProperty(yValue(d))){
+    dotPlot.selectAll(".dotPlot.dot").each(function(d, i) {
+        if(towers.hasOwnProperty(yValue(d))) {
             d3.select(this).attr("cx", towerStart - 2.5 * datapointRadius * towers[yValue(d)]);
             towers[yValue(d)] = towers[yValue(d)] + 1;
         } else {
@@ -184,7 +184,7 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
 
     // highlighting points
 
-    highlight = function(d, i){
+    highlight = function(d, i) {
         var selector = ".dot.data-" + i;
         d3.selectAll(selector)
             .classed("selected", true);
@@ -196,7 +196,7 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
             .style("stroke-width", 1)
             .style("opacity", 1)
     };
-    unhighlight = function(d, i){
+    unhighlight = function(d, i) {
         d3.selectAll(".dot.data-" + i)
             .classed("selected", false)
         d3.selectAll(".selected-border.dot.data-" + i)
