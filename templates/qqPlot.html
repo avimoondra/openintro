@@ -5,7 +5,7 @@
 
 <style type="text/css">
     svg {
-      font: 14px sans-serif;
+        font: 14px sans-serif;
     }
     .axis path,
     .axis line {
@@ -14,9 +14,12 @@
         shape-rendering: crispEdges;
     }
     .dot {
-      stroke: #569BBD;
-      stroke-width: 2;
-      fill: white;
+        fill: #569BBD;
+        opacity: 0.5;
+    }
+    .selected {
+        fill: #F05133;
+        opacity: 1;
     }
     .line {
         fill: none;
@@ -29,6 +32,13 @@
 </div>
 
 <script>
+
+var cloneAll = function(selector){
+    var nodes = d3.selectAll(selector);
+    nodes.each(function(d, i){
+        nodes[0][i] = this.parentNode.insertBefore(this.cloneNode(true), this.nextSibling); });
+    return nodes;
+}
 
 // https://stat.ethz.ch/R-manual/R-patched/library/stats/html/ppoints.html
 var ppoints = function(n, a){
@@ -105,7 +115,6 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
 
     scatterPlot.append("g")
         .attr("class", "y axis")
-        //.attr("transform", "translate(" + dotPlotWidth + ",0)")
         .call(yAxis)
     .append("text")
         .attr("class", "label")
@@ -174,21 +183,32 @@ d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
     });
 
     // highlighting points
-    expand = function(d, i){
-        d3.selectAll(".dot.data-" + i)
-            .attr("r", datapointRadius*3);
+
+    highlight = function(d, i){
+        var selector = ".dot.data-" + i;
+        d3.selectAll(selector)
+            .classed("selected", true);
+        var border = cloneAll(selector)
+            .classed("selected-border", true)
+            .attr("r", datapointRadius + 3)
+            .style("fill", "none")
+            .style("stroke", "#F05133")
+            .style("stroke-width", 1)
+            .style("opacity", 1)
     };
-    shrink = function(d, i){
+    unhighlight = function(d, i){
         d3.selectAll(".dot.data-" + i)
-            .attr("r", datapointRadius);
+            .classed("selected", false)
+        d3.selectAll(".selected-border.dot.data-" + i)
+            .remove()
     };
 
     d3.selectAll(".scatterPlot.dot")
-        .on("mouseenter", expand)
-        .on("mouseleave", shrink);
+        .on("mouseenter", highlight)
+        .on("mouseleave", unhighlight);
     d3.selectAll(".dotPlot.dot")
-        .on("mouseenter", expand)
-        .on("mouseleave", shrink);
+        .on("mouseenter", highlight)
+        .on("mouseleave", unhighlight);
 });
 
 </script>
