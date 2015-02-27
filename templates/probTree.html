@@ -31,6 +31,13 @@
     .mathg text{
         text-anchor: middle;
     }
+    circle[class$="border"] {
+        fill: none;
+        stroke-width: 1;
+    }
+    .hidden {
+        opacity: 1e-6;
+    }
 </style>
 
 <div class="row">
@@ -47,10 +54,13 @@
                 <g transform="translate(460,-10)">
                     <g id="flippedPr" class="bayesVis">
                         <circle cy="-50" class="circle-0"></circle>
+                        <circle cy="-50" class="circle-0-border"></circle>
                     </g>
                     <g id="LawOfTotalPr" class="bayesVis" transform="translate(0,60)">
                         <circle cx="-60" class="circle-0"></circle>
+                        <circle cx="-60" class="circle-0-border"></circle>
                         <circle cx="60" class="circle-2"></circle>
+                        <circle cx="60"class="circle-2-border"></circle>
                         <text>+</text>
                     </g>
                     <line class="math-line" x1="-165" y1="6" x2="165" y2="6"></line>
@@ -63,10 +73,10 @@
     </div>
     <div class="col-md-5">
         <div class="panel">
-            <p><b>Step 1.</b>Animate Tree I <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw Tree </button> </p>
+            <p><b>Step 1.</b> Draw main branches <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw sub branches </button> </p>
             <p><b>Step 2.</b>Animate Tree II <button id="animateTree-II" type="button" class="btn btn-primary btn-xs"> Draw Subtrees </button> </p>
             <p><b>Step 3.</b> Compute joint probabilities <button id="computeJointProbs" type="button" class="btn btn-primary btn-xs"> Compute </button> </p>
-            <p><b>Step 4.</b> Compute P(yes | +) using Bayes' Rule <button id="computeBayesProb" type="button" class="btn btn-primary btn-xs"> Compute </button></p>
+            <p><b>Step 4.</b> Compute P( yes | + ) using Bayes' Theorem <button id="computeBayesProb" type="button" class="btn btn-primary btn-xs"> Compute </button></p>
         </div>
     </div>
 </div>
@@ -82,7 +92,8 @@ var svg = d3.select("#svgWrapper").select("svg")
     .attr("height", height + margin.top + margin.bottom)
 
 var red = "#F05133",
-      gray = "#808080";
+      gray = "#808080",
+      grayRedScale = d3.interpolateRgb(gray,red);
 
 var trunkWidth = 80,
       graphWidth = width - 100,
@@ -94,23 +105,25 @@ var TREEDATA = {},
 var dispatch = d3.dispatch("statechange")
 
 dispatch.on("statechange.joints", function(joints){
-    index = 0;
-    d3.selectAll("g.bayesVis>.circle-" + index)
-        .attr("r", joints[index].jointPr * trunkWidth)
-        .attr("fill", d3.interpolateRgb(gray,red)(joints[index].jointPr));
-
-    index = 2;
-    d3.selectAll("g.bayesVis>.circle-" + index)
-        .attr("r", joints[index].jointPr * trunkWidth)
-        .attr("fill", d3.interpolateRgb(gray,red)(joints[index].jointPr));
-
+    [0, 2].forEach(function(index){
+        d3.selectAll("g.bayesVis>.circle-" + index)
+            .attr("r", joints[index].jointPr * trunkWidth)
+            .attr("fill", grayRedScale(joints[index].jointPr));
+        d3.selectAll("g.bayesVis>.circle-" + index + "-border")
+            .attr("r", joints[index].jointPr * trunkWidth + 3)
+            .style("stroke", grayRedScale(joints[index].jointPr));
+        d3.selectAll("circle.circle-border.tree-circle-" + index)
+            .attr("r", joints[index].jointPr * trunkWidth + 3)
+            .style("stroke", grayRedScale(joints[index].jointPr));
+    })
     calc = joints[0].jointPr/(joints[0].jointPr + joints[2].jointPr)
     d3.select("#bayesCalc")
         .text(formatDecimal(calc, 3))
 })
 
 var formatDecimal = function(num, numDecimals){
-    return parseFloat(Math.round(num*100)/100).toFixed(numDecimals)
+    scale = Math.pow(10, numDecimals)
+    return parseFloat(Math.round(num*scale)/scale).toFixed(numDecimals)
 }
 
 var computeJointsNames = function(data){
@@ -139,6 +152,13 @@ var computeJoints = function(data){
         }
     }
     return joints;
+}
+
+var cloneAll = function(selector) {
+    var nodes = d3.selectAll(selector);
+    nodes.each(function(d, i) {
+        nodes[0][i] = this.parentNode.insertBefore(this.cloneNode(true), this.nextSibling); });
+    return nodes;
 }
 
 var trunkToProbScale = d3.scale.linear()
@@ -277,13 +297,21 @@ d3.probTree = function(){
         var circle = g.selectAll(".node.joint").selectAll("circle")
             .data(function(d, i){
                 return [i]; })
+        // the index *is* the data
         circle.enter().append("circle")
-            .attr("class",function(d, i){ return "circle-" + d; })
+            .attr("class",function(d, i){ return "tree-circle-" + d; })
         circle
             .attr("r", function(d){
                 return joints[d].jointPr * trunkWidth; })
             .attr("fill", function(d){
-                return d3.interpolateRgb(gray,red)(joints[d].jointPr); })
+                return grayRedScale(joints[d].jointPr); })
+
+        // create these circle borders on first time ONLY
+        if (d3.selectAll('.node.joint>circle[class$="border"]')[0].length == 0) {
+            var circleBorders = cloneAll("circle[class^='tree-circle']")
+                .classed("circle-border", true)
+                .classed("hidden", true)
+        }
 
         dispatch.statechange(joints);
 
@@ -296,7 +324,7 @@ d3.probTree = function(){
             .attr("x", 60) //TODO MAGIC NUMBER
             .attr("text-anchor","start")
         text.text(function(d){
-            return "P( " + jointsNames[d] + " ) = " + formatDecimal(joints[d].jointPr, 2) })
+            return "P( " + jointsNames[d] + " ) = " + formatDecimal(joints[d].jointPr, 3) })
     }
 
     probTree.width = function(x) {
@@ -356,6 +384,8 @@ var animateBayes = function(){
         .transition()
         .ease("linear")
         .style("opacity", 1)
+    d3.selectAll(".hidden")
+        .classed("hidden", false)
 }
 
 var graph = d3.probTree()
