@@ -1,0 +1,244 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script src="../static/js/jstat.js"></script>
+
+<style type="text/css">
+    .panel {
+        width: 200px;
+        border-color: #808080;
+        padding: 10px;
+        margin-left: 80px;
+    }
+    svg {
+        font: 14px sans-serif;
+    }
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    .dot {
+        fill: #569BBD;
+        opacity: 0.5;
+    }
+    .selected {
+        fill: #F05133;
+        opacity: 1;
+    }
+    .line {
+        fill: none;
+        stroke: #000;
+    }
+</style>
+
+<div class="row">
+    <div id="svgWrapper" class="col-md-7"></div>
+    <div class="col-md-5">
+        <div class="panel">
+            <p>Num points</p>
+            <p>Thickness of Tail</p>
+            <p>Skew left skew right</p>
+        </div>
+    </div>
+</div>
+
+<script>
+
+var cloneAll = function(selector) {
+    var nodes = d3.selectAll(selector);
+    nodes.each(function(d, i) {
+        nodes[0][i] = this.parentNode.insertBefore(this.cloneNode(true), this.nextSibling); });
+    return nodes;
+}
+
+// https://stat.ethz.ch/R-manual/R-patched/library/stats/html/ppoints.html
+var ppoints = function(n, a) {
+    a = a || (n <= 10 ? 3/8 : 1/2);
+    return d3.range(1,n+1).map(function(d, i) {
+        return (d - a)/(n + (1 - a) - a);
+    });
+}
+
+var preprocessData = function(data) {
+    data.forEach(function(d) {
+        d["height"] = +d["heights"];
+        delete d["heights"]; });
+    data.sort(function(a, b) {
+        return d3.ascending(a["height"], b["height"]); });
+    percentiles = ppoints(data.length);
+    data.forEach(function(d, i) {
+        d["percentile"] = percentiles[i];
+        d["theoreticalQuantile"] = jStat.normal.inv(d["percentile"],0,1); });
+    return data;
+}
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom,
+      histogramWidth = 160,
+      scatterPlotWidth = width - histogramWidth;
+
+var svg = d3.select("#svgWrapper").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+svg.append("g")
+    .attr("class","histogramPlot")
+    .attr("transform", "translate(" + margin.left + "," + (margin.top + height) + ")rotate(-90)");
+
+svg.append("g")
+    .attr("class","scatterPlot")
+    .attr("transform", "translate(" + (margin.left + histogramWidth) + "," + margin.top + ")");
+
+var data = [];
+
+d3.csv("../static/data/00/maleHeights.txt", function(error, csv) {
+    data = preprocessData(csv);
+
+    var xValue = function(d) { return d["theoreticalQuantile"]; },
+          xScale = d3.scale.linear()
+            .domain(d3.extent(data, xValue)).nice()
+            .range([0, scatterPlotWidth]),
+          xMap = function(d) { return xScale(xValue(d)); },
+          xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+    var yValue = function(d) { return d["height"]; },
+          yScale = d3.scale.linear()
+            .domain(d3.extent(data, yValue)).nice()
+            .range([height, 0]),
+          yMap = function(d) { return yScale(yValue(d)); },
+          yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+    // scatter
+
+    scatterPlot = svg.select("g.scatterPlot");
+
+    scatterPlot.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+    .append("text")
+        .attr("class", "label")
+        .attr("x", scatterPlotWidth)
+        .attr("y", -6)
+        .style("text-anchor", "end")
+        .text("Theoretical Quantiles");
+
+    scatterPlot.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+    .append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Heights (in)");
+
+    scatterPlot.selectAll(".scatterPlot .dot")
+        .data(data)
+    .enter().append("circle")
+        .attr("class", function(d, i) {
+            return "scatterPlot dot data-" + i })
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return xMap(d); })
+        .attr("cy", function(d) { return yMap(d); });
+
+    // line
+
+    var line = d3.svg.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .interpolate("linear");
+
+    mean = jStat.mean(data.map(yValue));
+    stdev = jStat.stdev(data.map(yValue));
+    minX = d3.min(data, xValue);
+    maxX = d3.max(data, xValue);
+
+    lineData = [
+        {"x": xScale(maxX), "y": yScale(mean + stdev * maxX)},
+        {"x": xScale(minX), "y": yScale(mean - stdev * maxX)}];
+
+    scatterPlot.append("path")
+        .attr("class", "line")
+        .attr("d", line(lineData))
+        .style("stroke-dasharray", ("3, 3"));
+
+    // histogram
+
+    histogramPlot = svg.select("g.histogramPlot");
+
+    //var values = d3.range(1000).map(d3.random.bates(10));
+    var values = data.map(yValue)
+    console.log(values)
+
+    var x = d3.scale.linear()
+        .domain([d3.min(values), d3.max(values)])
+        //.domain([0,1])
+        .range([0, height]);
+
+    console.log(d3.min(values))
+    console.log(d3.max(values))
+
+    // Generate a histogram using twenty uniformly-spaced bins.
+    var histData = d3.layout.histogram()
+        .range([d3.min(values), d3.max(values)])
+        .bins(15)
+        (values);
+    console.log(histData)
+
+    var y = d3.scale.linear()
+        .domain([0, d3.max(histData, function(d) { return d.y; })])
+        .range([histogramWidth, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var bar = histogramPlot.selectAll(".bar")
+        .data(histData)
+      .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y)+ ")"; });
+
+    bar.append("rect")
+        .attr("x", 1)
+        .attr("width", function(d) {
+            return x(d3.min(values) + histData[0].dx) - x(d3.min(values)) - 1; })
+        .attr("height", function(d) { return histogramWidth - y(d.y); });
+
+    // highlighting points
+
+    datapointRadius = 3.5;
+
+    highlight = function(d, i) {
+        var selector = ".dot.data-" + i;
+        d3.selectAll(selector)
+            .classed("selected", true);
+        var border = cloneAll(selector)
+            .classed("selected-border", true)
+            .attr("r", datapointRadius + 3)
+            .style("fill", "none")
+            .style("stroke", "#F05133")
+            .style("stroke-width", 1)
+            .style("opacity", 1)
+    };
+    unhighlight = function(d, i) {
+        d3.selectAll(".dot.data-" + i)
+            .classed("selected", false)
+        d3.selectAll(".selected-border.dot.data-" + i)
+            .remove()
+    };
+
+    d3.selectAll(".scatterPlot.dot")
+        .on("mouseenter", highlight)
+        .on("mouseleave", unhighlight);
+
+});
+
+</script>
+
+{% endblock %}

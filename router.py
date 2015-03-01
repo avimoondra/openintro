@@ -69,5 +69,9 @@ def chap2_probTree():
 def chap3_qqPlot():
     return render_template('qqPlot.html')
 
+@app.route('/chap3/qqPlotLoad')
+def chap3_qqPlot_load():
+    return render_template('qqPlotLoad.html')
+
 if __name__ == '__main__':
     app.run()

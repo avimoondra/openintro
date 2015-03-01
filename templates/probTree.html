@@ -106,15 +106,17 @@ var dispatch = d3.dispatch("statechange")
 
 dispatch.on("statechange.joints", function(joints){
     [0, 2].forEach(function(index){
+        radius = joints[index].jointPr * trunkWidth;
+        color = grayRedScale(joints[index].jointPr)
         d3.selectAll("g.bayesVis>.circle-" + index)
-            .attr("r", joints[index].jointPr * trunkWidth)
-            .attr("fill", grayRedScale(joints[index].jointPr));
+            .attr("r", radius)
+            .attr("fill", color);
         d3.selectAll("g.bayesVis>.circle-" + index + "-border")
-            .attr("r", joints[index].jointPr * trunkWidth + 3)
-            .style("stroke", grayRedScale(joints[index].jointPr));
+            .attr("r", radius + 3)
+            .style("stroke", color);
         d3.selectAll("circle.circle-border.tree-circle-" + index)
-            .attr("r", joints[index].jointPr * trunkWidth + 3)
-            .style("stroke", grayRedScale(joints[index].jointPr));
+            .attr("r", radius + 3)
+            .style("stroke", color);
     })
     calc = joints[0].jointPr/(joints[0].jointPr + joints[2].jointPr)
     d3.select("#bayesCalc")
