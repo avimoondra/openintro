@@ -2,9 +2,11 @@
 {% block body %}
 
 <script src="../static/js/jstat.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="../static/css/jquery-ui.css">
+<script src="../static/js/jquery-ui.min.js"></script>
+<!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
-
+-->
 <style type="text/css">
     *:focus {
         outline: 0;
@@ -54,17 +56,65 @@
     <div class="col-md-5">
         <div class="panel">
             <p> Sample size: <tspan id="numPoints"></tspan>
-                <div class="sliderWrapper"><div id="slider-sampleSize"></div></div>
+                <div class="sampleSize sliderWrapper">
+                    <div id="slider-sampleSize"></div>
+                </div>
             </p>
             <p>Thickness of Tail
-            <div class="sliderWrapper"><div id="slider-tailSize"></div></div>
+                <div class="tailSize sliderWrapper">
+                    <div id="slider-tailSize"></div>
+                </div>
             </p>
-            <p>Skew left skew right</p>
+            <p>Skew left, skew right
+                <div class="overlayWrapper"></div>
+            </p>
+
         </div>
     </div>
 </div>
 
 <script>
+
+// other
+
+sampleSizeSvg = d3.select(".sampleSize.sliderWrapper").append("svg")
+    .attr("width", 310)
+    .attr("height", 30)
+.append("g")
+    .attr("id", "sampleSizeAxis")
+
+axisWidth = 270;
+sampleSizeScale = d3.scale.pow().exponent(1/3)
+    .domain([1, 1000])
+    .range([0, axisWidth])
+sampleSizeAxis = d3.svg.axis()
+    .scale(sampleSizeScale)
+    .orient("bottom")
+    .tickValues([1, 10, 100, 500, 1000])
+d3.select("#sampleSizeAxis")
+    .attr("transform", "translate(12,10)")
+    .attr("class", "axis")
+    .call(sampleSizeAxis)
+
+tailSizeSvg = d3.select(".tailSize.sliderWrapper").append("svg")
+    .attr("width", 310)
+    .attr("height", 30)
+.append("g")
+    .attr("id", "tailSizeAxis")
+
+tailSizeScale = d3.scale.linear()
+    .domain([0, 10])
+    .range([0, axisWidth])
+tailSizeAxis = d3.svg.axis()
+    .scale(tailSizeScale)
+    .orient("bottom")
+    .ticks(4)
+d3.select("#tailSizeAxis")
+    .attr("transform", "translate(12,10)")
+    .attr("class", "axis")
+    .call(tailSizeAxis)
+
+// body
 
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
       width = 960 - margin.left - margin.right,
@@ -87,6 +137,8 @@ svg.append("g")
 var numPoints = 100;
 var tailSize = 0;
 var tailToggle = false;
+var skewOptions = {};
+var skewToggle = false;
 var data = [];
 
 
@@ -135,6 +187,62 @@ var initTailSizeSlider = function(){
         .slider("value", startingValue);
 }
 initTailSizeSlider();
+
+var initSkewOverlay = function() {
+    // change cursor style to cross hair
+
+    overlaySVGWidth = 300;
+    overlaySVGHeight = 150;
+    overlaySVG = d3.select(".overlayWrapper").append("svg")
+        .attr("width", overlaySVGWidth)
+        .attr("height", overlaySVGHeight)
+
+    overlaySVGmargin = {top: 10, right: 10, bottom: 10, left: 10};
+    rectWidth = overlaySVGWidth - overlaySVGmargin.left - overlaySVGmargin.right;
+    rectHeight = overlaySVGHeight - overlaySVGmargin.top - overlaySVGmargin.bottom;
+
+    g = overlaySVG.append("g")
+        .attr("transform","translate(" + overlaySVGmargin.left + "," + overlaySVGmargin.top + ")")
+
+    g.append("rect")
+        .attr("width", rectWidth)
+        .attr("height", rectHeight)
+        .style("color", "gray")
+        .style("opacity", 0.1)
+
+
+    var radius = 5
+    var xScale = d3.scale.linear()
+        .domain([radius, rectWidth - radius])
+        .range([3/7,7/3])
+    var yScale = d3.scale.linear()
+        .domain([radius, rectHeight - radius])
+        .range([1, 10])
+
+    function dragmove() {
+        var cx = Math.max(radius, Math.min(rectWidth - radius, d3.event.x))
+        var cy = Math.max(radius, Math.min(rectHeight - radius, d3.event.y))
+
+        d3.select(this)
+            .attr("cx", cx)
+            .attr("cy", cy);
+        tailToggle = false;
+        skewToggle = true;
+        skewOptions["location"] = xScale(cx);
+        skewOptions["scale"] = yScale(cy);
+        renderPlots();
+    }
+
+    var drag = d3.behavior.drag()
+        .on("drag", dragmove);
+
+    g.append("circle")
+        .attr("r", radius)
+        .attr("cx", rectWidth / 2)
+        .attr("cy", rectHeight / 2)
+        .call(drag)
+}
+initSkewOverlay();
 
 var initPlots = function() {
 
@@ -198,6 +306,11 @@ var generateRandomData = function() {
     if (tailToggle) {
         console.log("studentt")
         sampler = function() { return jStat.studentt.sample(tailSize); }
+    } else if (skewToggle) {
+        console.log("skew")
+        // alpha = skewOptions["location"]
+        // skewOptions["scale"]
+        sampler = function() { return jStat.beta.sample(alpha, beta)}
     } else {
         console.log("normal")
         sampler = function() { return jStat.normal.sample(0, 1); }
