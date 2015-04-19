@@ -1,11 +1,14 @@
 {% extends "layout.html" %}
 {% block body %}
 <style type="text/css">
-    .panel {
+    #svgWrapper {
+        display: inline-block;
+    }
+    #panelWrapper {
         width: 200px;
-        border-color: #808080;
-        padding: 10px 10px 10px 10px;
-        margin-left: 30px;
+        border: solid #808080 1px;
+        padding: 10px;
+        display: inline-block;
     }
     .separator {
         margin-bottom: 10px;
@@ -14,12 +17,12 @@
     }
 </style>
 
-<div class="row">
-    <div class="col-md-7">
-        <svg id="svg_canvas" width="800", height="400"></svg>
+<div>
+    <div id="svgWrapper">
+        <svg width="800", height="400"></svg>
     </div>
-    <div class="col-md-5">
-        <div class="panel">
+    <div id="panelWrapper">
+        <div>
             <p> Stratified Sampling </p>
             <div class="separator"></div>
             <p> <b>Step 1.</b> Group cases by color into 4 stratum:
@@ -43,25 +46,20 @@
         svg.selectAll("text").remove();
 
         var circles = svg.selectAll("circle")
-        .data(data_points)
+        .data(dataPoints)
         .enter()
         .append("circle");
 
         circles.attr("cx", function(d, i) {
-            return d["rand_cx"];
-        })
+            return d["rand_cx"]; })
         .attr("cy", function(d, i) {
-            return d["rand_cy"];
-        })
+            return d["rand_cy"]; })
         .attr("r", function(d, i){
-           return d["r"];
-       })
+           return d["r"]; })
         .attr("class", function(d, i){
-           return d["class"];
-       })
+           return d["class"]; })
         .attr("color_name", function(d, i){
-          return d["color_name"];
-      })
+          return d["color_name"]; })
         .style("fill", function(d, i){
            return d["color"];
        });
@@ -70,14 +68,14 @@
     // buttons
     d3.select("#button_strata").on("click", function(){
         var svg = d3.select("svg");
-        strata_by_color(svg);
+        strataByColor(svg);
         d3.select("#button_strata").classed("disabled", true)
         d3.select("#button_resample").classed("disabled", false);
     });
 
     d3.select("#button_resample").on("click", function(){
         var svg = d3.select("svg");
-        select_samples(svg);
+        selectSamples(svg);
         d3.select("#button_resample").classed("disabled", true);
         d3.select("#button_reset").classed("disabled", false);
     });
@@ -90,169 +88,169 @@
 
 
     // SVG
-    var svg = d3.select("#svg_canvas")
-    var svg_width = svg.attr("width")
-    var svg_height = svg.attr("height")
-    point_width = 3;
+    var svg = d3.select("svg")
+    var svgViewBoxWidth = svg.attr("width")
+    var svgViewBoxHeight = svg.attr("height")
 
-    x_domain = [0, svg_width];
-    x_range = [point_width, svg_width-point_width];
-    var x_scale = d3.scale.linear().domain(x_domain).range(x_range);
+    var svgViewBoxWidth = 800; //internal coordinate system for width, height
+    var svgViewBoxHeight = 400;
+    var svgWidth = (848 - 200); // actual width, height
+    var svgHeight = (svgViewBoxHeight / svgViewBoxWidth) * (svgWidth)
 
-    y_domain = [0, svg_height];
-    y_range = [point_width, svg_height-point_width];
-    var y_scale = d3.scale.linear().domain(y_domain).range(y_range);
+    var svg = d3.select("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("viewBox","0 0 " + svgViewBoxWidth + " " + svgViewBoxHeight);
+
+    pointRadius = 3;
+    strataRadius = 80;
+    populationSize = 100;
+    sampleSize = 24;
+
+    var xScale = d3.scale.linear()
+        .domain([0, svgViewBoxWidth])
+        .range([pointRadius, svgViewBoxWidth - pointRadius]);
+
+    var yScale = d3.scale.linear()
+        .domain([0, svgViewBoxHeight])
+        .range([pointRadius, svgViewBoxHeight - pointRadius]);
 
     // colors
     blue = "#569BBD";
     green = "#4C721D";
-    yellow = "#F4DC00";
-    red = "#F05133";
     black = "#000000";
-    gray = "#808080";
-    lgray = "#D9D9D9";
+    yellow = "#F4DC00";
     colors = [blue, green, black, yellow];
-    color_names = ["blue","green","black","yellow"];
+    colorNames = ["blue","green","black","yellow"];
+    gray = "#808080";
+    red = "#F05133";
 
     // generate data
-    pop_size = 100
-    samp_size = 24
-    data_stratas = [];
-    strata_radius = 80
-    data_points = [];
+    dataStratas = [];
+    dataPoints = [];
     var generate_data = function(){
-    	data_stratas = [];
-    	data_points = [];
-    	// generate stratas
-    	for( var i = 0; i < colors.length; i++){
-    		strata = {
-                "cx":  (i * ((svg_width) / colors.length) + strata_radius + 20),
-                "cy": (svg_height/2),
-                "r": strata_radius,
+
+        dataStratas = [];
+        dataPoints = [];
+
+        // generate stratas
+        for( var i = 0; i < colors.length; i++){
+            strata = {
+                "cx":  (i * ((svgViewBoxWidth) / colors.length) + strataRadius + 20),
+                "cy": (svgViewBoxHeight/2),
+                "r": strataRadius,
                 "color": colors[i],
                 "class": "strata_circle"
             };
-            data_stratas.push(strata);
+            dataStratas.push(strata);
         }
+
         //generate points
-        for(var i = 0; i < pop_size; i++){
-                    index = Math.floor(Math.random()*colors.length);
-                    strata = data_stratas[index]
-                    rand_angle = Math.random() * 2 * Math.PI;
-                    rand_radius = Math.random() * (strata["r"] - 5);
-                    point = {
-                        "rand_cx": x_scale(Math.random() * svg_width),
-                        "rand_cy": y_scale(Math.random() * svg_height),
-                        "strata_cx": (function(strata_origin_cx, strata_radius){
-                        	return rand_radius * Math.cos(rand_angle) + strata_origin_cx;
-                        })(strata["cx"], strata["r"]),
-                        "strata_cy": (function(strata_origin_cy, strata_radius){
-                        	return rand_radius * Math.sin(rand_angle) + strata_origin_cy;
-                        })(strata["cy"], strata["r"]),
-                        "color": colors[index],
-              "color_name": color_names[index],
-              "r": 3,
-              "class": "point_circle"
-          }
-          data_points.push(point);
-      }
+        for(var i = 0; i < populationSize; i++){
+            index = Math.floor(Math.random()*colors.length);
+            strata = dataStratas[index]
+            rand_angle = Math.random() * 2 * Math.PI;
+            rand_radius = Math.random() * (strata["r"] - 5);
+            point = {
+                "rand_cx": xScale(Math.random() * svgViewBoxWidth),
+                "rand_cy": yScale(Math.random() * svgViewBoxHeight),
+                "strata_cx": rand_radius * Math.cos(rand_angle) + strata["cx"],
+                "strata_cy": rand_radius * Math.sin(rand_angle) + strata["cy"],
+                "color": colors[index],
+                "color_name": colorNames[index],
+                "r": pointRadius,
+                "class": "point_circle"
+            }
+            dataPoints.push(point);
+        }
     };
 
     // strata by color
-    var strata_by_color = function(svg){
+    var strataByColor = function(svg){
         svg.selectAll(".selected_point_fill").remove();
         svg.selectAll(".selected_point_stroke").remove();
 
-          svg.selectAll(".point_circle")
-          .transition()
-          .attr("cx", function(d, i) {
-            return d["strata_cx"];
-        })
-          .attr("cy", function(d, i) {
-            return d["strata_cy"];
-        })
+        svg.selectAll(".point_circle")
+            .transition()
+            .attr("cx", function(d, i) {
+                return d["strata_cx"]; })
+            .attr("cy", function(d, i) {
+                return d["strata_cy"]; })
 
-      var stratas = svg.selectAll(".strata_circle")
-      .data(data_stratas)
-      .enter()
-      .append("circle")
+        var stratas = svg.selectAll(".strata_circle")
+            .data(dataStratas)
+            .enter()
+            .append("circle")
 
-      stratas.attr("cx", function(d, i){
-        return d["cx"]
-    })
-      .attr("cy", function(d, i){
-        return d["cy"]
-    })
-      .attr("r", function(d, i){
-        return d["r"]
-    })
-      .attr("class", function(d, i){
-         return d["class"]
-     })
-      .style("fill-opacity", 0)
-      .style("stroke-width", 2)
-      .style("stroke", gray);
+        stratas.attr("cx", function(d, i){
+                return d["cx"]; })
+            .attr("cy", function(d, i){
+                return d["cy"]; })
+            .attr("r", function(d, i){
+                return d["r"]; })
+            .attr("class", function(d, i){
+                return d["class"]; })
+            .style("fill-opacity", 0)
+            .style("stroke-width", 2)
+            .style("stroke", gray);
 
-      var text = svg.selectAll("text")
-      .data(data_stratas)
-      .enter()
-      .append("text")
-      .text(function(d, i) {
-        return "Strata " + (i + 1);
-    })
-      .attr("x", function(d, i){
-        return d["cx"];
-    })
-      .attr("y", function(d, i){
-        return d["cy"] + d["r"] + 20;
-    })
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 15)
-      .attr("fill", gray)
-      .attr("text-anchor", "middle");
+        var text = svg.selectAll("text")
+            .data(dataStratas)
+        .enter().append("text")
+            .text(function(d, i) {
+                return "Strata " + (i + 1); })
+            .attr("x", function(d, i){
+                return d["cx"]; })
+            .attr("y", function(d, i){
+                return d["cy"] + d["r"] + 20; })
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 15)
+            .attr("fill", gray)
+            .attr("text-anchor", "middle");
     };
 
     // sample from stratas
     var sample_without_replacement = function(arr, num_samples){
         samples = []
         for(i = 0; i < num_samples; i++){
-          var index = Math.floor(Math.random()*arr.length);
-          samples.push(arr.splice(index, 1)[0]);
-      }
-      return samples;
-    }
-
-    var select_samples = function(svg){
-    	svg.selectAll(".selected_point_fill").remove();
-    	svg.selectAll(".selected_point_stroke").remove();
-
-      for(var i = 0; i < colors.length; i++){
-          var circles = svg.selectAll("[color_name=" + color_names[i] + "]");
-          var samples = sample_without_replacement(circles[0], samp_size/colors.length);
-
-          for(var j = 0; j < samples.length; j++){
-            selected_point = d3.select(samples[j])
-
-            svg.append("circle")
-            .attr("class", "selected_point_fill")
-            .attr("cx", selected_point.attr("cx"))
-            .attr("cy", selected_point.attr("cy"))
-            .attr("r",point_width)
-            .style("fill",red);
-
-            svg.append("circle")
-            .attr("class", "selected_point_stroke")
-            .attr("cx", selected_point.attr("cx"))
-            .attr("cy", selected_point.attr("cy"))
-            .attr("r",point_width + 2)
-            .style("fill-opacity",0)
-            .style("stroke-width",1)
-            .style("stroke",red);
+            var index = Math.floor(Math.random()*arr.length);
+            samples.push(arr.splice(index, 1)[0]);
         }
+        return samples;
     }
+
+    var selectSamples = function(svg){
+        svg.selectAll(".selected_point_fill").remove();
+        svg.selectAll(".selected_point_stroke").remove();
+
+        for(var i = 0; i < colors.length; i++){
+            var circles = svg.selectAll("[color_name=" + colorNames[i] + "]");
+            var samples = sample_without_replacement(circles[0], sampleSize/colors.length);
+
+            for(var j = 0; j < samples.length; j++){
+                selected_point = d3.select(samples[j])
+
+                svg.append("circle")
+                    .attr("class", "selected_point_fill")
+                    .attr("cx", selected_point.attr("cx"))
+                    .attr("cy", selected_point.attr("cy"))
+                    .attr("r",pointRadius)
+                    .style("fill",red);
+
+                svg.append("circle")
+                    .attr("class", "selected_point_stroke")
+                    .attr("cx", selected_point.attr("cx"))
+                    .attr("cy", selected_point.attr("cy"))
+                    .attr("r",pointRadius + 2)
+                    .style("fill-opacity",0)
+                    .style("stroke-width",1)
+                    .style("stroke",red);
+            }
+        }
     };
 
     reset_action();
+
 </script>
 
 {% endblock %}

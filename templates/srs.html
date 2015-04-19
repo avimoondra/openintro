@@ -1,19 +1,23 @@
 {% extends "layout.html" %}
 {% block body %}
 <style type="text/css">
-    .panel {
+    #svgWrapper {
+        display: inline-block;
+    }
+    #panelWrapper {
         width: 200px;
-        border-color: #808080;
+        border: solid #808080 1px;
         padding: 10px;
-        margin-left: 30px;
+        display: inline-block;
     }
 </style>
 
-<div class="row">
-    <div class="col-md-7">
-        <svg id="svg_canvas" width="800", height="400"></svg></div>
-    <div class="col-md-5">
-        <div class="panel">
+<div class="asdf">
+    <div id="svgWrapper">
+        <svg></svg>
+    </div>
+    <div id="panelWrapper">
+        <div>
             Simple Random Sampling. Randomly select 24 cases out of a population of 100:
             <button id="button_resample" type="button" class="btn btn-primary btn-xs"> Sample </button>
         </div>
@@ -22,64 +26,63 @@
 
 <script type="text/javascript">
 
-    // colors
     blue = "#569BBD";
     green = "#4C721D";
-    yellow = "#F4DC00";
-    red = "#F05133";
     black = "#000000";
-    gray = "#808080";
-    lgray = "#D9D9D9";
+    yellow = "#F4DC00";
     colors = [blue, green, black, yellow]
+    red = "#F05133";
 
-    // data
-    pop_size = 100
-    samp_size = 24
+    populationSize = 100
+    sampleSize = 24
     var dataset = [];
-    for (var i = 0; i < pop_size; i++) {
+    for (var i = 0; i < populationSize; i++) {
         dataset.push(colors[Math.floor(Math.random()*colors.length)]);
     }
 
-    // SVG
-    var svg = d3.select("#svg_canvas")
-    var svg_width = svg.attr("width")
-    var svg_height = svg.attr("height")
-    point_width = 3;
+    var svgViewBoxWidth = 800; //internal coordinate system for width, height
+    var svgViewBoxHeight = 400;
+    var svgWidth = (848 - 200); // actual width, height
+    var svgHeight = (svgViewBoxHeight / svgViewBoxWidth) * (svgWidth)
 
-    x_domain = [0, svg_width];
-    x_range = [point_width, svg_width-point_width];
-    var x_scale = d3.scale.linear().domain(x_domain).range(x_range);
+    var svg = d3.select("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("viewBox","0 0 " + svgViewBoxWidth + " " + svgViewBoxHeight);
 
-    y_domain = [0, svg_height];
-    y_range = [point_width, svg_height-point_width];
-    var y_scale = d3.scale.linear().domain(y_domain).range(y_range);
+    pointRadius = 3;
+
+    var xScale = d3.scale.linear()
+        .domain([0, svgViewBoxWidth])
+        .range([pointRadius, svgViewBoxWidth - pointRadius]);
+
+    var yScale = d3.scale.linear()
+        .domain([0, svgViewBoxHeight])
+        .range([pointRadius, svgViewBoxHeight - pointRadius]);
 
     var circles = svg.selectAll("circle")
-                        .data(dataset)
-                        .enter()
-                        .append("circle");
+        .data(dataset)
+        .enter()
+        .append("circle");
 
     circles.attr("cx", function(d, i) {
-                x_coord = Math.random() * svg_width;
-                return x_scale(x_coord);
-            })
-           .attr("cy", function(d, i) {
-                y_coord = Math.random() * svg_height;
-                return y_scale(y_coord);
-            })
-           .attr("r", point_width)
-           .style("fill", function(d, i){
-            return d;
-           });
+            x_coord = Math.random() * svgViewBoxWidth;
+            return xScale(x_coord); })
+       .attr("cy", function(d, i) {
+            y_coord = Math.random() * svgViewBoxHeight;
+            return yScale(y_coord); })
+       .attr("r", pointRadius)
+       .style("fill", function(d, i){
+            return d; });
 
-    // sampling strategy
     var select_samples = function(svg){
 
         svg.selectAll(".selected_point_fill").remove();
         svg.selectAll(".selected_point_stroke").remove();
 
         var circles = svg.selectAll("circle");
-        for(var i = 0; i < samp_size; i++){
+
+        for(var i = 0; i < sampleSize; i++){
             index_in_circles = Math.floor(Math.random()*circles[0].length);
             selected_point = d3.select(circles[0][index_in_circles])
 
@@ -87,25 +90,25 @@
                 .attr("class", "selected_point_fill")
                 .attr("cx", selected_point.attr("cx"))
                 .attr("cy", selected_point.attr("cy"))
-                .attr("r",point_width)
+                .attr("r", pointRadius)
                 .style("fill",red);
 
             svg.append("circle")
                 .attr("class", "selected_point_stroke")
                 .attr("cx", selected_point.attr("cx"))
                 .attr("cy", selected_point.attr("cy"))
-                .attr("r",point_width + 2)
-                .style("fill-opacity",0)
+                .attr("r", pointRadius + (2/3)*pointRadius)
+                .style("fill-opacity", 0)
                 .style("stroke-width",1)
                 .style("stroke",red);
         }
     }
 
-    // sample button
     d3.select("#button_resample").on("click", function(){
         var svg = d3.select("svg");
         select_samples(svg);
     });
+
 </script>
 
 {% endblock %}
