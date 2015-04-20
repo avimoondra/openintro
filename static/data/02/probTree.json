@@ -1,8 +1,8 @@
 {
     "meta": {
-        "dataset": "fakedata",
-        "event1": "Question 1?",
-        "event2": "Question 2?"
+        "dataset": "Example 2.55",
+        "event1": "Truth",
+        "event2": "Mammogram"
         },
     "tree": {
         "name": "event",
@@ -13,12 +13,12 @@
                 "position": "top",
                 "nodeClass": "node event step2",
                 "linkClass": "link event1 step1",
-                "eventOutcome": "yes",
-                "probability": 0.10,
+                "eventOutcome": "cancer",
+                "probability": 0.0035,
                 "children": [
                     {
                         "name": "joint",
-                        "probability": 0.75,
+                        "probability": 0.89,
                         "position": "top",
                         "nodeClass": "node joint step3",
                         "linkClass": "link event2 step2",
@@ -29,7 +29,7 @@
                         "position": "bot",
                         "nodeClass": "node joint step3",
                         "linkClass": "link event2 step2",
-                        "probability": 0.25,
+                        "probability": 0.11,
                         "eventOutcome": "-"
                     }
                 ]
@@ -39,12 +39,12 @@
                 "position": "bot",
                 "nodeClass": "node event step2",
                 "linkClass": "link event1 step1",
-                "probability": 0.90,
-                "eventOutcome": "no",
+                "probability": 0.9965,
+                "eventOutcome": "no cancer",
                 "children": [
                     {
                         "name": "joint",
-                        "probability": 0.15,
+                        "probability": 0.07,
                         "position": "top",
                         "nodeClass": "node joint step3",
                         "linkClass": "link event2 step2",
@@ -55,7 +55,7 @@
                         "position": "bot",
                         "nodeClass": "node joint step3",
                         "linkClass": "link event2 step2",
-                        "probability": 0.85,
+                        "probability": 0.93,
                         "eventOutcome": "-"
                     }
                 ]

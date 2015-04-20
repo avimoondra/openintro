@@ -44,11 +44,11 @@
     <div id="svgWrapper" class="col-md-7">
         <svg>
             <g class="mathg" transform="translate(50,500)">
-                <text x="10" y="0"> P( yes | +) = </text>
+                <text x="10" y="0"> P( cancer | +) = </text>
                 <g transform="translate(160,-10)">
-                    <text> P(yes and +) </text>
+                    <text> P(cancer & +) </text>
                     <line class="math-line" x1="-100" y1="6" x2="100" y2="6"></line>
-                    <text y="20"> P( yes and + ) + P( no and +) </text>
+                    <text y="20"> P(cancer & +) + P(no cancer & +) </text>
                 </g>
                 <text x="275"> = </text>
                 <g transform="translate(460,-10)">
@@ -134,7 +134,7 @@ var computeJointsNames = function(data){
     for(i = 0; i < 2; i++){
         for(j = 0; j < 2; j++){
             node = data.children[i]
-            jointsNames[k++] = node.eventOutcome + " and " + node.children[j].eventOutcome;
+            jointsNames[k++] = node.eventOutcome + " & " + node.children[j].eventOutcome;
         }
     }
     return jointsNames
@@ -290,7 +290,7 @@ d3.probTree = function(){
             selection.selectAll("tspan.eventText")
                 .transition()
                 .text(function(d){
-                    return formatDecimal(d.probability, 2) })
+                    return formatDecimal(d.probability, 4) })
         })
 
         // joint nodes
@@ -323,10 +323,11 @@ d3.probTree = function(){
                 return [i]; })
         text.enter().append("text")
             .attr("class", "jointText")
-            .attr("x", 60) //TODO MAGIC NUMBER
+            .attr("x", -30) //TODO MAGIC NUMBER
+            .attr("y", 20)
             .attr("text-anchor","start")
         text.text(function(d){
-            return "P( " + jointsNames[d] + " ) = " + formatDecimal(joints[d].jointPr, 3) })
+            return "P( " + jointsNames[d] + " ) = " + formatDecimal(joints[d].jointPr, 4) })
     }
 
     probTree.width = function(x) {
