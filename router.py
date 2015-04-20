@@ -73,5 +73,9 @@ def chap3_qqPlot():
 def chap3_qqPlot_load():
     return render_template('qqPlotLoad.html')
 
+@app.route('/histpdf')
+def histpdf():
+    return render_template('histpdf.html')
+
 if __name__ == '__main__':
     app.run()

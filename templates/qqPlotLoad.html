@@ -4,9 +4,7 @@
 <script src="../static/js/jstat.js"></script>
 <link rel="stylesheet" href="../static/css/jquery-ui.css">
 <script src="../static/js/jquery-ui.min.js"></script>
-<!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
--->
+
 <style type="text/css">
     *:focus {
         outline: 0;
@@ -49,26 +47,35 @@
         margin-left: 12px;
         margin-right: 10px;
     }
+    .disabled {
+        opacity: 0.2;
+    }
 </style>
 
 <div class="row">
     <div id="svgWrapper" class="col-md-7"></div>
     <div class="col-md-5">
         <div class="panel">
-            <p> Sample size: <tspan id="numPoints"></tspan>
-                <div class="sampleSize sliderWrapper">
-                    <div id="slider-sampleSize"></div>
-                </div>
+            <div id="numPointsWrapper">
+                <p> Sample size: <tspan id="numPoints"></tspan>
+                    <div class="sampleSize sliderWrapper">
+                        <div id="slider-sampleSize"></div>
+                    </div>
+                </p>
+            </div>
+            <p> Skewness
+                <br>
+                <button id="no-skew" class="btn btn-default btn-sm" type="submit">No Skew</button>
+                <button id="left-skew" class="btn btn-default btn-sm" type="submit">Skew Left</button>
+                <button id="right-skew" class="btn btn-default btn-sm" type="submit">Skew Right</button>
             </p>
-            <p>Thickness of Tail
-                <div class="tailSize sliderWrapper">
-                    <div id="slider-tailSize"></div>
-                </div>
-            </p>
-            <p>Skew left, skew right
-                <div class="overlayWrapper"></div>
-            </p>
-
+            <div id="tailSizeWrapper">
+                <p>Thickness of Tail
+                    <div class="tailSize sliderWrapper">
+                        <div id="slider-tailSize"></div>
+                    </div>
+                </p>
+            </div>
         </div>
     </div>
 </div>
@@ -117,10 +124,10 @@ d3.select("#tailSizeAxis")
 // body
 
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
-      width = 960 - margin.left - margin.right,
+      width = 1000 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom,
-      histogramWidth = 160,
-      scatterPlotWidth = width - histogramWidth;
+      histogramHeight = 160,
+      scatterPlotWidth = width - histogramHeight;
 
 var svg = d3.select("#svgWrapper").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -132,7 +139,7 @@ svg.append("g")
 
 svg.append("g")
     .attr("id","scatterPlotWrapper")
-    .attr("transform", "translate(" + (margin.left + histogramWidth) + "," + margin.top + ")");
+    .attr("transform", "translate(" + (margin.left + histogramHeight) + "," + margin.top + ")");
 
 var numPoints = 100;
 var tailSize = 0;
@@ -164,7 +171,6 @@ var initSampleSizeSlider = function(){
 }
 initSampleSizeSlider();
 
-
 var initTailSizeSlider = function(){
     var startingValue = 0;
 
@@ -188,61 +194,37 @@ var initTailSizeSlider = function(){
 }
 initTailSizeSlider();
 
-var initSkewOverlay = function() {
-    // change cursor style to cross hair
-
-    overlaySVGWidth = 300;
-    overlaySVGHeight = 150;
-    overlaySVG = d3.select(".overlayWrapper").append("svg")
-        .attr("width", overlaySVGWidth)
-        .attr("height", overlaySVGHeight)
-
-    overlaySVGmargin = {top: 10, right: 10, bottom: 10, left: 10};
-    rectWidth = overlaySVGWidth - overlaySVGmargin.left - overlaySVGmargin.right;
-    rectHeight = overlaySVGHeight - overlaySVGmargin.top - overlaySVGmargin.bottom;
-
-    g = overlaySVG.append("g")
-        .attr("transform","translate(" + overlaySVGmargin.left + "," + overlaySVGmargin.top + ")")
-
-    g.append("rect")
-        .attr("width", rectWidth)
-        .attr("height", rectHeight)
-        .style("color", "gray")
-        .style("opacity", 0.1)
-
-
-    var radius = 5
-    var xScale = d3.scale.linear()
-        .domain([radius, rectWidth - radius])
-        .range([3/7,7/3])
-    var yScale = d3.scale.linear()
-        .domain([radius, rectHeight - radius])
-        .range([1, 10])
-
-    function dragmove() {
-        var cx = Math.max(radius, Math.min(rectWidth - radius, d3.event.x))
-        var cy = Math.max(radius, Math.min(rectHeight - radius, d3.event.y))
-
-        d3.select(this)
-            .attr("cx", cx)
-            .attr("cy", cy);
-        tailToggle = false;
-        skewToggle = true;
-        skewOptions["location"] = xScale(cx);
-        skewOptions["scale"] = yScale(cy);
-        renderPlots();
-    }
-
-    var drag = d3.behavior.drag()
-        .on("drag", dragmove);
-
-    g.append("circle")
-        .attr("r", radius)
-        .attr("cx", rectWidth / 2)
-        .attr("cy", rectHeight / 2)
-        .call(drag)
+var enableTailSlider = function(){
+    $( "#slider-tailSize" ).slider({ disabled: false })
+    $( "#tailSizeWrapper>*").removeClass("disabled");
 }
-initSkewOverlay();
+
+var disableTailSlider = function(){
+    $( "#slider-tailSize" ).slider({ disabled: true })
+    $( "#slider-tailSize" ).slider("value", 0)
+    $( "#tailSizeWrapper>*").addClass("disabled");
+}
+
+d3.select("#no-skew").on("click", function(){
+    skewToggle = "no";
+    tailToggle = false;
+    enableTailSlider();
+    renderPlots()
+})
+
+d3.select("#left-skew").on("click", function(){
+    skewToggle = "left";
+    tailToggle = false;
+    disableTailSlider();
+    renderPlots()
+})
+
+d3.select("#right-skew").on("click", function(){
+    skewToggle = "right"
+    tailToggle = false;
+    disableTailSlider();
+    renderPlots()
+})
 
 var initPlots = function() {
 
@@ -275,7 +257,10 @@ var initPlots = function() {
         .attr("y", -12)
         .attr("dy", ".71em")
         .style("text-anchor", "start")
-        .text("Frequency");
+        .text("Density");
+
+    histogramPlot.append("path")
+        .attr("class","line")
 
 }
 initPlots();
@@ -296,24 +281,37 @@ var preprocessData = function(dataArray) {
         obj = {}
         obj["observedQuantity"] = d;
         obj["percentile"] = percentiles[i];
-        obj["theoreticalQuantile"] = jStat.normal.inv(obj["percentile"],0,1);
+        obj["theoreticalQuantile"] = jStat.normal.inv(obj["percentile"], 0, 1);
         objectData[i] = obj; });
     return objectData;
 }
 
+studenttSampler = function() { return jStat.studentt.sample(tailSize); }
+leftSkewSampler = function() {
+    sigma = 0.6;
+    mu = 2.5;
+    delta = 3;
+    z = jStat.lognormal.sample(mu, sigma)
+    return jStat.normal.sample(z, delta);
+}
+rightSkewSampler = function() { return -1*leftSkewSampler(); }
+normalSampler = function() { return jStat.normal.sample(0, 1); }
+
 var generateRandomData = function() {
     var sampler;
     if (tailToggle) {
-        console.log("studentt")
-        sampler = function() { return jStat.studentt.sample(tailSize); }
-    } else if (skewToggle) {
-        console.log("skew")
-        // alpha = skewOptions["location"]
-        // skewOptions["scale"]
-        sampler = function() { return jStat.beta.sample(alpha, beta)}
+        sampler = studenttSampler;
+    }
+    else if (skewToggle == "left") {
+        sampler = leftSkewSampler;
+    }
+    else if (skewToggle == "right") {
+        sampler = rightSkewSampler;
+    }
+    else if (skewToggle == "no" ) {
+        sampler = normalSampler;
     } else {
-        console.log("normal")
-        sampler = function() { return jStat.normal.sample(0, 1); }
+        sampler = normalSampler;
     }
     return d3.range(numPoints).map(sampler);
 }
@@ -363,26 +361,45 @@ var renderPlots = function() {
     // update histogram
 
     var histogramPlot = svg.select("g#histogramPlotWrapper");
-
     var observedQuantities = data.map(yValue);
 
+    histogramWidth = height;
     var xScaleHistogram = d3.scale.linear()
-        .domain(d3.extent(data, yValue)).nice()
-        .range([0, height]);
+        .domain(d3.extent(data, yValue))
+        .range([0, histogramWidth]);
 
     var histData = d3.layout.histogram()
+        .frequency(false)
         .range([d3.min(observedQuantities), d3.max(observedQuantities)])
         .bins(15)
         (observedQuantities);
 
+    var pdfLineData = (function(){
+        numPoints = 1000;
+        minX = d3.min(histData.map(function(d){ return d.x; }))
+        maxX = d3.max(histData.map(function(d){ return d.x + d.dx; }))
+        range = d3.range(minX, maxX, (maxX - minX)/numPoints)
+        arr = [];
+        for(var i = 0; i < numPoints; i++){
+            x = range[i];
+            y = jStat.normal.pdf(x, 0, 1);
+            arr.push({"x": x, "y": y});
+        }
+        return arr;
+    })();
+
+    rescaleFactor = 1/histData[0].dx // for density
+    histData.map(function(d){
+        d.y = rescaleFactor*d.y; })
+
     var yScaleHistogram = d3.scale.linear()
         .domain([0, d3.max(histData, function(d) { return d.y; })])
-        .range([histogramWidth, 0]);
+        //.domain([0, d3.max([d3.max(pdfLineData, function(d) { return d.y; }), d3.max(histData, function(d) { return d.y; }) ]) ])
+        .range([histogramHeight, 0]);
 
     var yAxis = d3.svg.axis()
         .scale(yScaleHistogram)
-        .tickValues([ Math.round(yScaleHistogram.domain()[1]),
-                           Math.round(yScaleHistogram.domain()[1]/2) ])
+        .ticks(0)
         .orient("left");
 
     histogramPlot.select(".y.axis")
@@ -396,24 +413,24 @@ var renderPlots = function() {
 
     bar
         .attr("x", function(d){
-            return xScaleHistogram(d.x) + 1; })
+            return xScaleHistogram(d.x); })
         .attr("y", function(d){
             return yScaleHistogram(d.y); })
         .attr("width", function(d) {
-            return xScaleHistogram(d3.min(observedQuantities) + histData[0].dx) - xScaleHistogram(d3.min(observedQuantities)) - 1; })
-        .attr("height", function(d) { return histogramWidth - yScaleHistogram(d.y); });
+            return xScaleHistogram(observedQuantities[0] + histData[0].dx) - xScaleHistogram(observedQuantities[0]) - 1; })
+        .attr("height", function(d) { return histogramHeight - yScaleHistogram(d.y); });
 
     // update line
+
+    minX = d3.min(data, xValue);
+    maxX = d3.max(data, xValue);
 
     var line = d3.svg.line()
         .x(function(d) { return d.x; })
         .y(function(d) { return d.y; })
-        .interpolate("linear");
 
     mean = jStat.mean(data.map(yValue));
     stdev = jStat.stdev(data.map(yValue));
-    minX = d3.min(data, xValue);
-    maxX = d3.max(data, xValue);
 
     lineData = [
         {"x": xScale(maxX), "y": yScale(mean + stdev * maxX)},
@@ -428,6 +445,16 @@ var renderPlots = function() {
     path
         .attr("d", line(lineData))
         .style("stroke-dasharray", ("3, 3"));
+
+    // update probability density function (pdf)
+
+    var pdfLine = d3.svg.line()
+        .x(function(d) { return xScaleHistogram(d.x); })
+        .y(function(d) { return yScaleHistogram(d.y); })
+
+    histogramPlot.select("path.line")
+        .datum(pdfLineData)
+        .attr("d", pdfLine(pdfLineData))
 }
 renderPlots();
 
