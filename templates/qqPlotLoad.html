@@ -9,11 +9,16 @@
     *:focus {
         outline: 0;
     }
-    .panel {
-        width: 320px;
-        border-color: #808080;
+    #panelWrapper {
+        width: 260px;
+        border: solid #808080 1px;
         padding: 10px;
-        margin-left: 80px;
+        display: inline-block;
+        margin-top: 10px;
+        position: fixed;
+    }
+    #svgWrapper {
+        display: inline-block;
     }
     svg {
         font: 14px sans-serif;
@@ -40,7 +45,7 @@
         opacity: 0.2;
     }
     .sliderWrapper {
-        width: 300px;
+        width: 240px;
         display: inline-block;
     }
     div[id^='slider'] {
@@ -52,10 +57,10 @@
     }
 </style>
 
-<div class="row">
-    <div id="svgWrapper" class="col-md-7"></div>
-    <div class="col-md-5">
-        <div class="panel">
+<div>
+    <div id="svgWrapper"></div>
+    <div id="panelWrapper">
+        <div>
             <div id="numPointsWrapper">
                 <p> Sample size: <tspan id="numPoints"></tspan>
                     <div class="sampleSize sliderWrapper">
@@ -90,7 +95,7 @@ sampleSizeSvg = d3.select(".sampleSize.sliderWrapper").append("svg")
 .append("g")
     .attr("id", "sampleSizeAxis")
 
-axisWidth = 270;
+axisWidth = 215;
 sampleSizeScale = d3.scale.pow().exponent(1/3)
     .domain([1, 1000])
     .range([0, axisWidth])
@@ -124,8 +129,8 @@ d3.select("#tailSizeAxis")
 // body
 
 var margin = {top: 20, right: 20, bottom: 40, left: 40},
-      width = 1000 - margin.left - margin.right,
-      height = 500 - margin.top - margin.bottom,
+      width = 660 - margin.left - margin.right,
+      height = 400 - margin.top - margin.bottom,
       histogramHeight = 160,
       scatterPlotWidth = width - histogramHeight;
 

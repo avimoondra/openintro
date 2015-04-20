@@ -9,6 +9,13 @@
         border: solid #808080 1px;
         padding: 10px;
         display: inline-block;
+        position: fixed;
+        margin-top: 10px;
+    }
+    .separator {
+        margin-bottom: 10px;
+        height: 1px;
+        background-color: #808080;
     }
 </style>
 
@@ -18,8 +25,11 @@
     </div>
     <div id="panelWrapper">
         <div>
-            Simple Random Sampling. Randomly select 24 cases out of a population of 100:
-            <button id="button_resample" type="button" class="btn btn-primary btn-xs"> Sample </button>
+            <p> Simple Random Sampling </p>
+            <div class="separator"></div>
+            <p> Randomly select 24 cases out of a population of 100:
+                <button id="button_resample" type="button" class="btn btn-primary btn-xs"> Sample </button>
+            </p>
         </div>
     </div>
 </div>
