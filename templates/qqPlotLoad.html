@@ -123,7 +123,7 @@ d3.select("#tailSizeAxis")
 
 // body
 
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
+var margin = {top: 20, right: 20, bottom: 40, left: 40},
       width = 1000 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom,
       histogramHeight = 160,
@@ -145,7 +145,7 @@ var numPoints = 100;
 var tailSize = 0;
 var tailToggle = false;
 var skewOptions = {};
-var skewToggle = false;
+var skewToggle = "no";
 var data = [];
 
 
@@ -209,6 +209,7 @@ d3.select("#no-skew").on("click", function(){
     skewToggle = "no";
     tailToggle = false;
     enableTailSlider();
+    $( "#slider-tailSize" ).slider("value", 0)
     renderPlots()
 })
 
@@ -258,6 +259,9 @@ var initPlots = function() {
         .attr("dy", ".71em")
         .style("text-anchor", "start")
         .text("Density");
+
+    // histogramPlot.append("g")
+    //     .attr("class", "x axis histogramPlot")
 
     histogramPlot.append("path")
         .attr("class","line")
@@ -375,14 +379,24 @@ var renderPlots = function() {
         (observedQuantities);
 
     var pdfLineData = (function(){
-        numPoints = 1000;
-        minX = d3.min(histData.map(function(d){ return d.x; }))
-        maxX = d3.max(histData.map(function(d){ return d.x + d.dx; }))
-        range = d3.range(minX, maxX, (maxX - minX)/numPoints)
+        granularity = 1000;
+        minX = d3.min(histData, function(d){ return d.x; })
+        maxX = d3.max(histData, function(d){ return d.x + d.dx; })
+        range = d3.range(minX, maxX, (maxX - minX)/granularity)
         arr = [];
-        for(var i = 0; i < numPoints; i++){
+
+        var pdfFunction = function(x){
+            if (skewToggle != "no" && observedQuantities.length > 1) {
+                mean = d3.mean(observedQuantities)
+                std = d3.deviation(observedQuantities)
+                return jStat.normal.pdf(x, mean, std)
+            }
+            return jStat.normal.pdf(x, 0, 1);
+        }
+
+        for(var i = 0; i < granularity; i++){
             x = range[i];
-            y = jStat.normal.pdf(x, 0, 1);
+            y = pdfFunction(x);
             arr.push({"x": x, "y": y});
         }
         return arr;
@@ -394,7 +408,7 @@ var renderPlots = function() {
 
     var yScaleHistogram = d3.scale.linear()
         .domain([0, d3.max(histData, function(d) { return d.y; })])
-        //.domain([0, d3.max([d3.max(pdfLineData, function(d) { return d.y; }), d3.max(histData, function(d) { return d.y; }) ]) ])
+        //.domain([0, d3.max([d3.max(pdfLineData, function(d) { return d.y; }), d3.max(histData, function(d) { return d.y; }) ]) ]) // takes the max of both histogram and pdf data to see extent of both in the chart
         .range([histogramHeight, 0]);
 
     var yAxis = d3.svg.axis()
@@ -404,6 +418,14 @@ var renderPlots = function() {
 
     histogramPlot.select(".y.axis")
         .call(yAxis)
+
+    var xAxis = d3.svg.axis()
+        .scale(xScaleHistogram)
+        .ticks(10)
+        .orient("top");
+
+    // histogramPlot.select(".x.axis")
+    //     .call(xAxis)
 
     bar = histogramPlot.selectAll("rect.bar")
         .data(histData)
