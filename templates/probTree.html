@@ -6,7 +6,7 @@
         display: inline-block;
     }
     #panelWrapper {
-        width: 200px;
+        width: 250px;
         border: solid #808080 1px;
         padding: 10px;
         display: inline-block;
@@ -48,7 +48,7 @@
 <div class="row">
     <div id="svgWrapper">
         <svg>
-            <g class="mathg" transform="translate(50,500)">
+            <g class="mathg" transform="translate(60,500)">
                 <text x="10" y="0"> P( cancer | +) = </text>
                 <g transform="translate(160,-10)">
                     <text> P(cancer & +) </text>
@@ -78,23 +78,29 @@
     </div>
     <div id="panelWrapper">
         <div>
-            <p><b>Step 1.</b> Draw main branches <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw sub branches </button> </p>
-            <p><b>Step 2.</b>Animate Tree II <button id="animateTree-II" type="button" class="btn btn-primary btn-xs"> Draw Subtrees </button> </p>
-            <p><b>Step 3.</b> Compute joint probabilities <button id="computeJointProbs" type="button" class="btn btn-primary btn-xs"> Compute </button> </p>
-            <p><b>Step 4.</b> Compute P( yes | + ) using Bayes' Theorem <button id="computeBayesProb" type="button" class="btn btn-primary btn-xs"> Compute </button></p>
+            <p><b>Step 1.</b> In Canada, about 0.35% of women over 40 will be diagnosed with breast cancer in any given year. <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw tree </button> </p>
+            <p><b>Step 2.</b> A common screening test for cancer is the mammogram, but this test is not perfect. In about 11% of patients with breast cancer, the test gives a false negative: it indicates a woman does not have breast cancer when she does have breast cancer. Similarly, the test gives a false positive in 7% of patients who do not have breast cancer: it indicates these patients have breast cancer when they actually do not. <button id="animateTree-II" type="button" class="btn btn-primary btn-xs"> Draw subtrees </button> </p>
+            <p><b>Step 3.</b> Compute joint probabilities based on cancer status and mammogram test results <button id="computeJointProbs" type="button" class="btn btn-primary btn-xs"> Compute </button> </p>
+            <p><b>Step 4.</b> Compute P( cancer | + ) using Bayes' Theorem <button id="computeBayesProb" type="button" class="btn btn-primary btn-xs"> Compute </button></p>
         </div>
     </div>
 </div>
 
 <script>
 
-var margin = {top: 40, right: 100, bottom: 40, left: 90},
-      width = 800 - margin.left - margin.right,
-      height = 800 - margin.top - margin.bottom;
+var svgViewBoxWidth = 800; //internal coordinate system for width, height
+var svgViewBoxHeight = 800;
+var svgWidth = 650; // actual width, height
+var svgHeight = svgWidth
+
+var margin = {top: 40, right: 100, bottom: 40, left: 100},
+      width = svgViewBoxWidth - margin.left - margin.right,
+      height = svgViewBoxHeight - margin.top - margin.bottom;
 
 var svg = d3.select("#svgWrapper").select("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", svgWidth)
+    .attr("height", svgHeight)
+    .attr("viewBox","0 0 " + svgViewBoxWidth + " " + svgViewBoxHeight);
 
 var red = "#F05133",
       gray = "#808080",
