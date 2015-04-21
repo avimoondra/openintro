@@ -109,6 +109,7 @@ var red = "#F05133",
       strokeColor = "#808080";
 
 var trunkWidth = 80,
+      maxCircleArea = Math.pow(trunkWidth,2),
       graphWidth = width - 100,
       graphHeight = height - 400;
 
@@ -117,9 +118,13 @@ var TREEDATA = {},
 
 var dispatch = d3.dispatch("statechange")
 
+var computeRadius = function(probability){
+    return Math.sqrt(probability*maxCircleArea/Math.PI)
+}
+
 dispatch.on("statechange.joints", function(joints){
     [0, 2].forEach(function(index){
-        radius = joints[index].jointPr * trunkWidth;
+        radius = computeRadius(joints[index].jointPr)
         d3.selectAll("g.bayesVis>.circle-" + index)
             .attr("r", radius)
             .style("fill", fillColor)
@@ -311,7 +316,7 @@ d3.probTree = function(){
             .attr("class",function(d, i){ return "tree-circle-" + d; })
         circle
             .attr("r", function(d){
-                return joints[d].jointPr * trunkWidth; })
+                return computeRadius(joints[d].jointPr); })
             .style("fill", fillColor)
             .style("stroke", strokeColor)
             .style("opacity", 0.8)
