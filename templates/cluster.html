@@ -151,11 +151,11 @@
         for(var i = 0; i < num_clusters; i++){
             cluster = dataClusters[i]
             for(var j = 0; j < cluster["num_points"]; j++){
-                randomAngle = Math.random() * 2 * Math.PI;
-                randomRadius = Math.random() * (cluster["r"] - 5);
+                randAngle = Math.random() * 2 * Math.PI;
+                randRadius = Math.random() * (cluster["r"] - 5);
                 point = {
-                    "clust_cx": randomRadius * Math.cos(randomAngle) + cluster["cx"],
-                    "clust_cy": randomRadius * Math.sin(randomAngle) + cluster["cy"],
+                    "clust_cx": randRadius * Math.cos(randAngle) + cluster["cx"],
+                    "clust_cy": randRadius * Math.sin(randAngle) + cluster["cy"],
                     "color": colors[Math.floor(Math.random()*colors.length)],
                     "r": pointRadius,
                     "class": "point_circle " + cluster["id"]

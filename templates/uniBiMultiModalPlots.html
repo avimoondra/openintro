@@ -1,60 +1,67 @@
 {% extends "layout.html" %}
 {% block body %}
 <style>
-
-.chartWrapper{
-    display: inline-block;
-}
-
-.buttonRow{
-    width: 50%;
-    margin: 0 auto;
-}
-
-.chart .bar rect{
-    fill: #569BBD;
-}
-
-.chart {
-  font: 10px sans-serif;
-}
-
-.axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
+    #panelWrapper {
+        width: 180px;
+        border: solid #808080 1px;
+        padding: 10px;
+        display: inline-block;
+        position: fixed;
+        margin-top: 10px;
+    }
+    .chartWrapper{
+        display: inline-block;
+    }
+    .separator {
+        margin-bottom: 10px;
+        height: 1px;
+        background-color: #808080;
+    }
+    .buttonRow{
+        width: 50%;
+        margin: 0 auto;
+    }
+    .chart .bar rect{
+        fill: #569BBD;
+    }
+    .chart {
+        font: 10px sans-serif;
+    }
+    .axis path, .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
 </style>
 
-<div class="row">
-    <div class="col-md-9">
-        <div id="uniModal" class="chartWrapper">
-            <div class="svgWrapper"></div>
-            <div class="buttonRow">
-                <button type="button" class="btn btn-default dropButton">Drop</button>
-                <button type="button" class="btn btn-default resetButton disabled">Reset</button>
-            </div>
-        </div>
-        <div id="biModal" class="chartWrapper">
-            <div class="svgWrapper"></div>
-            <div class="buttonRow">
-                <button type="button" class="btn btn-default dropButton">Drop</button>
-                <button type="button" class="btn btn-default resetButton disabled">Reset</button>
-            </div>
-        </div>
-        <div id="multiModal" class="chartWrapper">
-            <div class="svgWrapper"></div>
-            <div class="buttonRow">
-                <button type="button" class="btn btn-default dropButton">Drop</button>
-                <button type="button" class="btn btn-default resetButton disabled">Reset</button>
-            </div>
+<div>
+    <div id="uniModal" class="chartWrapper">
+        <div class="svgWrapper"></div>
+        <div class="buttonRow">
+            <button type="button" class="btn btn-sm btn-default dropButton">Drop</button>
+            <button type="button" class="btn btn-sm btn-default resetButton disabled">Reset</button>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="panel">
+    <div id="biModal" class="chartWrapper">
+        <div class="svgWrapper"></div>
+        <div class="buttonRow">
+            <button type="button" class="btn btn-sm btn-default dropButton">Drop</button>
+            <button type="button" class="btn btn-sm btn-default resetButton disabled">Reset</button>
+        </div>
+    </div>
+    <div id="multiModal" class="chartWrapper">
+        <div class="svgWrapper"></div>
+        <div class="buttonRow">
+            <button type="button" class="btn btn-sm btn-default dropButton">Drop</button>
+            <button type="button" class="btn btn-sm btn-default resetButton disabled">Reset</button>
+        </div>
+    </div>
+    <div id="panelWrapper">
+        <div>
+            <p> Histogram Modes</p>
+            <div class="separator"></div>
             <p>
-                Histogram. Drop a "limp spaghetti" to see the peaks in the distribution more clearly. From left to right, we observe single modal, bimodal, and multimodal distributions.
+                Drop a "limp spaghetti" to see the peaks in the distribution more clearly. From left to right, we observe single modal, bimodal, and multimodal distributions.
             </p>
         </div>
     </div>
@@ -63,8 +70,8 @@
 <script>
 
 var margin = {top: 20, right: 30, bottom: 30, left: 30},
-    width = 320 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 220 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
 
 chartData = {};
 
@@ -150,7 +157,7 @@ var drawNoodle = function(chartName){
         .attr("class",chartName)
         .attr("d", lineFunction(lineDataStart))
         .attr("stroke", "#EDDDA9")
-        .attr("stroke-width", 2)
+        .attr("stroke-width", 4)
         .attr("fill", "none");
 }
 

@@ -41,21 +41,21 @@
 
 <script type="text/javascript">
 
-    var reset_action = function(){
+    var resetAction = function(){
         var svg = d3.select("svg");
         generate_data();
         svg.selectAll("circle").remove();
         svg.selectAll("text").remove();
 
         var circles = svg.selectAll("circle")
-        .data(dataPoints)
-        .enter()
-        .append("circle");
+            .data(dataPoints)
+            .enter()
+            .append("circle");
 
         circles.attr("cx", function(d, i) {
-            return d["rand_cx"]; })
+            return d["randCx"]; })
         .attr("cy", function(d, i) {
-            return d["rand_cy"]; })
+            return d["randCy"]; })
         .attr("r", function(d, i){
            return d["r"]; })
         .attr("class", function(d, i){
@@ -63,8 +63,7 @@
         .attr("color_name", function(d, i){
           return d["color_name"]; })
         .style("fill", function(d, i){
-           return d["color"];
-       });
+           return d["color"]; });
     };
 
     // buttons
@@ -83,7 +82,7 @@
     });
 
     d3.select("#button_reset").on("click", function(){
-        reset_action();
+        resetAction();
         d3.select("#button_reset").classed("disabled", true);
         d3.select("#button_strata").classed("disabled", false);
     });
@@ -123,7 +122,7 @@
     black = "#000000";
     yellow = "#F4DC00";
     colors = [blue, green, black, yellow];
-    colorNames = ["blue","green","black","yellow"];
+    color_names = ["blue","green","black","yellow"];
     gray = "#808080";
     red = "#F05133";
 
@@ -142,7 +141,7 @@
                 "cy": (svgViewBoxHeight/2),
                 "r": strataRadius,
                 "color": colors[i],
-                "class": "strata_circle"
+                "class": "strataCircle"
             };
             dataStratas.push(strata);
         }
@@ -151,17 +150,17 @@
         for(var i = 0; i < populationSize; i++){
             index = Math.floor(Math.random()*colors.length);
             strata = dataStratas[index]
-            rand_angle = Math.random() * 2 * Math.PI;
-            rand_radius = Math.random() * (strata["r"] - 5);
+            randAngle = Math.random() * 2 * Math.PI;
+            randRadius = Math.random() * (strata["r"] - 5);
             point = {
-                "rand_cx": xScale(Math.random() * svgViewBoxWidth),
-                "rand_cy": yScale(Math.random() * svgViewBoxHeight),
-                "strata_cx": rand_radius * Math.cos(rand_angle) + strata["cx"],
-                "strata_cy": rand_radius * Math.sin(rand_angle) + strata["cy"],
+                "randCx": xScale(Math.random() * svgViewBoxWidth),
+                "randCy": yScale(Math.random() * svgViewBoxHeight),
+                "strataCx": randRadius * Math.cos(randAngle) + strata["cx"],
+                "strataCy": randRadius * Math.sin(randAngle) + strata["cy"],
                 "color": colors[index],
-                "color_name": colorNames[index],
+                "color_name": color_names[index],
                 "r": pointRadius,
-                "class": "point_circle"
+                "class": "pointCircle"
             }
             dataPoints.push(point);
         }
@@ -169,17 +168,17 @@
 
     // strata by color
     var strataByColor = function(svg){
-        svg.selectAll(".selected_point_fill").remove();
-        svg.selectAll(".selected_point_stroke").remove();
+        svg.selectAll(".selectedPointFill").remove();
+        svg.selectAll(".selectedPointStroke").remove();
 
-        svg.selectAll(".point_circle")
+        svg.selectAll(".pointCircle")
             .transition()
             .attr("cx", function(d, i) {
-                return d["strata_cx"]; })
+                return d["strataCx"]; })
             .attr("cy", function(d, i) {
-                return d["strata_cy"]; })
+                return d["strataCy"]; })
 
-        var stratas = svg.selectAll(".strata_circle")
+        var stratas = svg.selectAll(".strataCircle")
             .data(dataStratas)
             .enter()
             .append("circle")
@@ -212,7 +211,7 @@
     };
 
     // sample from stratas
-    var sample_without_replacement = function(arr, num_samples){
+    var sampleWithoutReplacement = function(arr, num_samples){
         samples = []
         for(i = 0; i < num_samples; i++){
             var index = Math.floor(Math.random()*arr.length);
@@ -222,36 +221,35 @@
     }
 
     var selectSamples = function(svg){
-        svg.selectAll(".selected_point_fill").remove();
-        svg.selectAll(".selected_point_stroke").remove();
+        svg.selectAll(".selectedPointFill").remove();
+        svg.selectAll(".selectedPointStroke").remove();
 
         for(var i = 0; i < colors.length; i++){
-            var circles = svg.selectAll("[color_name=" + colorNames[i] + "]");
-            var samples = sample_without_replacement(circles[0], sampleSize/colors.length);
+            var circles = svg.selectAll("[color_name=" + color_names[i] + "]");
+            var samples = sampleWithoutReplacement(circles[0], sampleSize/colors.length);
 
             for(var j = 0; j < samples.length; j++){
-                selected_point = d3.select(samples[j])
+                selectedPoint = d3.select(samples[j])
 
                 svg.append("circle")
-                    .attr("class", "selected_point_fill")
-                    .attr("cx", selected_point.attr("cx"))
-                    .attr("cy", selected_point.attr("cy"))
-                    .attr("r",pointRadius)
-                    .style("fill",red);
+                    .attr("class", "selectedPointFill")
+                    .attr("cx", selectedPoint.attr("cx"))
+                    .attr("cy", selectedPoint.attr("cy"))
+                    .attr("r", pointRadius)
+                    .style("fill", red);
 
                 svg.append("circle")
-                    .attr("class", "selected_point_stroke")
-                    .attr("cx", selected_point.attr("cx"))
-                    .attr("cy", selected_point.attr("cy"))
-                    .attr("r",pointRadius + 2)
+                    .attr("class", "selectedPointStroke")
+                    .attr("cx", selectedPoint.attr("cx"))
+                    .attr("cy", selectedPoint.attr("cy"))
+                    .attr("r", pointRadius + 2)
                     .style("fill-opacity",0)
                     .style("stroke-width",1)
-                    .style("stroke",red);
+                    .style("stroke", red);
             }
         }
     };
-
-    reset_action();
+    resetAction();
 
 </script>
 

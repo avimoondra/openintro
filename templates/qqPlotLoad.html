@@ -90,7 +90,7 @@
 // other
 
 sampleSizeSvg = d3.select(".sampleSize.sliderWrapper").append("svg")
-    .attr("width", 310)
+    .attr("width", 250)
     .attr("height", 30)
 .append("g")
     .attr("id", "sampleSizeAxis")
@@ -108,23 +108,23 @@ d3.select("#sampleSizeAxis")
     .attr("class", "axis")
     .call(sampleSizeAxis)
 
-tailSizeSvg = d3.select(".tailSize.sliderWrapper").append("svg")
-    .attr("width", 310)
-    .attr("height", 30)
-.append("g")
-    .attr("id", "tailSizeAxis")
+// tailSizeSvg = d3.select(".tailSize.sliderWrapper").append("svg")
+//     .attr("width", 250)
+//     .attr("height", 30)
+// .append("g")
+//     .attr("id", "tailSizeAxis")
 
-tailSizeScale = d3.scale.linear()
-    .domain([0, 10])
-    .range([0, axisWidth])
-tailSizeAxis = d3.svg.axis()
-    .scale(tailSizeScale)
-    .orient("bottom")
-    .ticks(4)
-d3.select("#tailSizeAxis")
-    .attr("transform", "translate(12,10)")
-    .attr("class", "axis")
-    .call(tailSizeAxis)
+// tailSizeScale = d3.scale.linear()
+//     .domain([0, 10])
+//     .range([0, axisWidth])
+// tailSizeAxis = d3.svg.axis()
+//     .scale(tailSizeScale)
+//     .orient("bottom")
+//     .ticks(4)
+// d3.select("#tailSizeAxis")
+//     .attr("transform", "translate(12,10)")
+//     .attr("class", "axis")
+//     .call(tailSizeAxis)
 
 // body
 
@@ -253,7 +253,7 @@ var initPlots = function() {
 
     // histogram
 
-   var histogramPlot = svg.select("g#histogramPlotWrapper");
+    var histogramPlot = svg.select("g#histogramPlotWrapper");
 
     histogramPlot.append("g")
         .attr("class", "y axis histogramPlot")
@@ -265,8 +265,15 @@ var initPlots = function() {
         .style("text-anchor", "start")
         .text("Density");
 
-    // histogramPlot.append("g")
-    //     .attr("class", "x axis histogramPlot")
+    histogramPlot.append("g")
+        .attr("class", "x axis histogramPlot")
+    .append("text")
+        .attr("class", "label")
+        .attr("y", histogramHeight + 10)
+        .attr("x", height)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Observed");
 
     histogramPlot.append("path")
         .attr("class","line")
@@ -424,10 +431,10 @@ var renderPlots = function() {
     histogramPlot.select(".y.axis")
         .call(yAxis)
 
-    var xAxis = d3.svg.axis()
-        .scale(xScaleHistogram)
-        .ticks(10)
-        .orient("top");
+    // var xAxis = d3.svg.axis()
+    //     .scale(xScaleHistogram)
+    //     .ticks(10)
+    //     .orient("top");
 
     // histogramPlot.select(".x.axis")
     //     .call(xAxis)

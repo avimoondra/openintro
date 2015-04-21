@@ -8,11 +8,16 @@
     *:focus {
         outline: 0;
     }
-    .panel {
+    #svgWrapper {
+        display: inline-block;
+    }
+    #panelWrapper {
         width: 475px;
-        border-color: #808080;
+        border: solid #808080 1px;
         padding: 10px;
-        margin-left: -100px;
+        display: inline-block;
+        position: fixed;
+        margin-top: 10px;
     }
     .separator {
         margin-bottom: 10px;
@@ -86,9 +91,9 @@
     }
 </style>
 
-<div class="row">
-    <div class="col-md-7">
-        <svg width="800" height="800">
+<div>
+    <div id="svgWrapper">
+        <svg width="700" height="700">
             <g id="experimentTable" transform="translate(30,30)">
                 <text class="table-title" x="60" y="30"> Observed </text>
                 <text x="180" y="30">
@@ -212,7 +217,7 @@
 
         </svg>
     </div>
-    <div class="col-md-5 panel">
+    <div id="panelWrapper">
         <p> <b> Simulation </b></p>
         <p>
         Simulate the experiment 100 times under the assumption that the null hypothesis is true, i.e. assuming there is no gender bias. Use a deck of 48 cards, each representing one resume in the study. 35 of these cards are red, representing <font color="#F05133">promoted</font> candidates, and 13 are blue, representing <font color="#569BBD"> NOT promoted </font> candidates. <button id="simulation-step0" type="button" class="btn btn-primary btn-xs"> Generate Deck </button>

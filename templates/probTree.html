@@ -2,11 +2,16 @@
 {% block body %}
 
 <style type="text/css">
-    .panel {
+    #svgWrapper {
+        display: inline-block;
+    }
+    #panelWrapper {
         width: 200px;
-        border-color: #808080;
+        border: solid #808080 1px;
         padding: 10px;
-        margin-left: 30px;
+        display: inline-block;
+        position: fixed;
+        margin-top: 10px;
     }
     .link.event1{
         stroke: #F05133;
@@ -41,7 +46,7 @@
 </style>
 
 <div class="row">
-    <div id="svgWrapper" class="col-md-7">
+    <div id="svgWrapper">
         <svg>
             <g class="mathg" transform="translate(50,500)">
                 <text x="10" y="0"> P( cancer | +) = </text>
@@ -71,8 +76,8 @@
             </g>
         </svg>
     </div>
-    <div class="col-md-5">
-        <div class="panel">
+    <div id="panelWrapper">
+        <div>
             <p><b>Step 1.</b> Draw main branches <button id="animateTree-I" type="button" class="btn btn-primary btn-xs"> Draw sub branches </button> </p>
             <p><b>Step 2.</b>Animate Tree II <button id="animateTree-II" type="button" class="btn btn-primary btn-xs"> Draw Subtrees </button> </p>
             <p><b>Step 3.</b> Compute joint probabilities <button id="computeJointProbs" type="button" class="btn btn-primary btn-xs"> Compute </button> </p>
@@ -83,7 +88,7 @@
 
 <script>
 
-var margin = {top: 40, right: 100, bottom: 40, left: 70},
+var margin = {top: 40, right: 100, bottom: 40, left: 90},
       width = 800 - margin.left - margin.right,
       height = 800 - margin.top - margin.bottom;
 
@@ -93,7 +98,9 @@ var svg = d3.select("#svgWrapper").select("svg")
 
 var red = "#F05133",
       gray = "#808080",
-      grayRedScale = d3.interpolateRgb(gray,red);
+      grayRedScale = d3.interpolateRgb(gray,red),
+      fillColor = "#FFFFFF",
+      strokeColor = "#808080";
 
 var trunkWidth = 80,
       graphWidth = width - 100,
@@ -107,16 +114,10 @@ var dispatch = d3.dispatch("statechange")
 dispatch.on("statechange.joints", function(joints){
     [0, 2].forEach(function(index){
         radius = joints[index].jointPr * trunkWidth;
-        color = grayRedScale(joints[index].jointPr)
         d3.selectAll("g.bayesVis>.circle-" + index)
             .attr("r", radius)
-            .attr("fill", color);
-        d3.selectAll("g.bayesVis>.circle-" + index + "-border")
-            .attr("r", radius + 3)
-            .style("stroke", color);
-        d3.selectAll("circle.circle-border.tree-circle-" + index)
-            .attr("r", radius + 3)
-            .style("stroke", color);
+            .style("fill", fillColor)
+            .style("stroke", strokeColor)
     })
     calc = joints[0].jointPr/(joints[0].jointPr + joints[2].jointPr)
     d3.select("#bayesCalc")
@@ -305,15 +306,16 @@ d3.probTree = function(){
         circle
             .attr("r", function(d){
                 return joints[d].jointPr * trunkWidth; })
-            .attr("fill", function(d){
-                return grayRedScale(joints[d].jointPr); })
+            .style("fill", fillColor)
+            .style("stroke", strokeColor)
+            .style("opacity", 0.8)
 
         // create these circle borders on first time ONLY
-        if (d3.selectAll('.node.joint>circle[class$="border"]')[0].length == 0) {
-            var circleBorders = cloneAll("circle[class^='tree-circle']")
-                .classed("circle-border", true)
-                .classed("hidden", true)
-        }
+        // if (d3.selectAll('.node.joint>circle[class$="border"]')[0].length == 0) {
+        //     var circleBorders = cloneAll("circle[class^='tree-circle']")
+        //         .classed("circle-border", true)
+        //         .classed("hidden", true)
+        // }
 
         dispatch.statechange(joints);
 

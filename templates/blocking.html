@@ -2,11 +2,16 @@
 {% block body %}
 
 <style type="text/css">
-    .panel {
+    #svgWrapper {
+        display: inline-block;
+    }
+    #panelWrapper {
         width: 200px;
-        border-color: #808080;
-        padding: 10px 10px 10px 10px;
-        margin-left: 30px;
+        border: solid #808080 1px;
+        padding: 10px;
+        display: inline-block;
+        position: fixed;
+        margin-top: 10px;
     }
     .separator {
         margin-bottom: 10px;
@@ -29,12 +34,11 @@
 </style>
 
 <div class="row">
-    <div class="col-md-7">
-        <svg id="svg_canvas">
-        </svg>
+    <div id="svgWrapper">
+        <svg></svg>
     </div>
-    <div class="col-md-5">
-        <div class="panel">
+    <div id="panelWrapper">
+        <div>
             <p> Blocking in a randomized experiment. </p>
             <div class="separator"></div>
             <p> <b>Step 1.</b> Identify and divide patients into low-risk and high-risk blocks:
@@ -54,9 +58,9 @@
 <script type="text/javascript">
     // svg
     height = 1;
-    width = height * 2;
+    width = height * 1.8;
     domain = [0, width];
-    range = [0, 800];
+    range = [0, 700];
     svg_scale = d3.scale.linear().domain(domain).range(range);
     var svg = d3.select("svg").attr("width", svg_scale(width)).attr("height", svg_scale(height));
     var svg_width = svg.attr("width");

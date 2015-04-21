@@ -13,10 +13,16 @@
         fill-opacity: 0.5;
         stroke: #569BBD;
     }
-    .panel {
+    #svgWrapper {
+        display: inline-block;
+    }
+    #panelWrapper {
         width: 200px;
-        border-color: #808080;
-        padding: 10px 10px 10px 10px;
+        border: solid #808080 1px;
+        padding: 10px;
+        display: inline-block;
+        position: fixed;
+        margin-top: 10px;
     }
     .separator {
         margin-bottom: 10px;
@@ -28,12 +34,12 @@
     }
 </style>
 
-<div class="row">
-    <div class="col-md-9">
+<div>
+    <div id="svgWrapper">
         <svg></svg>
     </div>
-    <div class="col-md-3">
-        <div class="panel">
+    <div id="panelWrapper">
+        <div>
             <p>
                 Scatterplot of various numerical attributes of 54 cars. Plot different variables against each other to visualize interesting trends in the data.
             </p>
@@ -72,9 +78,9 @@ variables.forEach(function(element, index, array){
                 + "</a></li>");
 });
 
-var margin = {top: 20, right: 20, bottom: 50, left: 60},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+var margin = {top: 20, right: 20, bottom: 30, left: 30},
+    width = 560 - margin.left - margin.right,
+    height = 350 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
     .range([0, width]);
@@ -84,6 +90,7 @@ var y = d3.scale.linear()
 
 var xAxis = d3.svg.axis()
     .scale(x)
+    .ticks(5)
     .orient("bottom");
 
 var yAxis = d3.svg.axis()
@@ -102,7 +109,7 @@ var tooltip = d3.select("body").append("div")
 
 var scatterplot = function(var1, var2){
 
-    d3.tsv("../static/data/00/cars.txt", function(error, data) {
+    d3.csv("../static/data/00/cars.csv", function(error, data) {
         d3.selectAll(".graph-component").remove();
 
         data.forEach(function(d) {
@@ -120,8 +127,8 @@ var scatterplot = function(var1, var2){
             .classed("graph-component", true)
         .append("text")
             .attr("class", "label graph-component")
-            .attr("x", width/2)
-            .attr("y", 45)
+            .attr("x", width)
+            .attr("y", -10)
             .style("text-anchor", "end")
             .text(names[var1]);
 
@@ -132,16 +139,14 @@ var scatterplot = function(var1, var2){
         .append("text")
             .attr("class", "label graph-component")
             .attr("transform", "rotate(-90)")
-            .attr("x", -height/2)
-            .attr("y", -50)
+            .attr("y", 10)
             .attr("dy", ".71em")
-            .style("text-anchor", "middle")
+            .style("text-anchor", "end")
             .text(names[var2])
 
         svg.selectAll(".datapoint")
             .data(data)
-            .enter()
-            .append("circle")
+        .enter().append("circle")
             .attr("class", "datapoint graph-component")
             .attr("r", 5)
             .attr("cx", function(d) { return x(d[var1]); })
